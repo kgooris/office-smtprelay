@@ -1,0 +1,61 @@
+{{define "content"}}
+<h1>{{t "account.title"}}</h1>
+{{with .Data}}
+<p class="muted">{{t "account.signed_in_as"}} <strong>{{.Username}}</strong> · {{if eq .Role "admin"}}{{t "role.admin"}}{{else}}{{t "role.readonly"}}{{end}}</p>
+
+<div class="card">
+  <h2 style="margin-top:0">{{t "account.password_title"}}</h2>
+  <form method="post" action="/account">
+    <input type="hidden" name="csrf" value="{{$.CSRF}}">
+    <label for="current">{{t "account.current"}}</label>
+    <input id="current" type="password" name="current" autocomplete="current-password" required>
+    <label for="password">{{t "account.new"}}</label>
+    <input id="password" type="password" name="password" autocomplete="new-password" minlength="12" required>
+    <p class="hint">{{t "setup.password_hint"}}</p>
+    <label for="confirm">{{t "setup.confirm"}}</label>
+    <input id="confirm" type="password" name="confirm" autocomplete="new-password" minlength="12" required>
+    <p><button type="submit">{{t "account.submit"}}</button></p>
+  </form>
+  <p class="hint">{{t "account.signout_note"}}</p>
+</div>
+
+<div class="card">
+  <h2 style="margin-top:0">{{t "totp.title"}}</h2>
+  {{if .Recovery}}
+  <div class="flash ok">{{t "totp.recovery_intro"}}</div>
+  <pre>{{range .Recovery}}{{.}}
+{{end}}</pre>
+  <p class="hint">{{t "totp.recovery_hint"}}</p>
+  {{else if .Secret}}
+  <p>{{t "totp.setup_intro"}}</p>
+  <dl class="kv">
+    <dt>{{t "totp.secret"}}</dt><dd class="mono">{{.Secret}}</dd>
+    <dt>{{t "totp.uri"}}</dt><dd class="mono">{{.URI}}</dd>
+  </dl>
+  <p class="hint">{{t "totp.setup_hint"}}</p>
+  <form method="post" action="/account/totp/confirm">
+    <input type="hidden" name="csrf" value="{{$.CSRF}}">
+    <label for="code">{{t "totp.code"}}</label>
+    <input id="code" type="text" name="code" inputmode="numeric" autocomplete="one-time-code" required>
+    <p><button type="submit">{{t "totp.activate"}}</button></p>
+  </form>
+  {{else if .TOTP}}
+  <p><span class="badge ok">{{t "totp.on"}}</span> {{t "totp.codes_left" .CodesLeft}}</p>
+  <h3>{{t "totp.disable_title"}}</h3>
+    <form method="post" action="/account/totp/disable">
+      <input type="hidden" name="csrf" value="{{$.CSRF}}">
+      <label for="cur2">{{t "account.current"}}</label>
+      <input id="cur2" type="password" name="current" autocomplete="current-password" required>
+      <p><button type="submit" class="danger">{{t "totp.disable_button"}}</button></p>
+    </form>
+  {{else}}
+  <p>{{t "totp.intro"}}</p>
+  <p><span class="badge off">{{t "totp.off"}}</span></p>
+  <form method="post" action="/account/totp/begin">
+    <input type="hidden" name="csrf" value="{{$.CSRF}}">
+    <button type="submit">{{t "totp.begin"}}</button>
+  </form>
+  {{end}}
+</div>
+{{end}}
+{{end}}

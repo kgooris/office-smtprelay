@@ -1,0 +1,32 @@
+# Example deployment (Docker Compose, also works with QNAP Container Station).
+# Copy this file, adjust the values marked "change", then: docker compose up -d
+services:
+  office-smtprelay:
+    image: ghcr.io/kgooris/office-smtprelay:latest   # pin a version tag for production, e.g. :1.0.0
+    container_name: office-smtprelay
+    restart: unless-stopped
+    ports:
+      - "587:2525"   # SMTP for your devices (host port 587 -> container port 2525)
+      - "8080:8080"  # web UI, plain HTTP: put an HTTPS reverse proxy in front of it
+    environment:
+      TZ: Europe/Brussels                  # change: time zone used in the UI
+      SMTPRELAY_LANG: en                   # change: default UI language, en or nl
+      SMTPRELAY_HOSTNAME: relay.example.lan  # change: name shown in the SMTP greeting and certificate
+      SMTPRELAY_PUBLIC_SMTP_PORT: "587"    # port devices use (matches the mapping above)
+      # SMTPRELAY_TLS_NAMES: 192.168.1.10  # extra IPs/names for the generated certificate
+      # SMTPRELAY_TLS_MIN: "1.2"           # "1.0"/"1.1" only for very old devices
+      # SMTPRELAY_TRUST_PROXY: "true"      # when a reverse proxy sits in front of the UI
+      # SMTPRELAY_MAX_MESSAGE_MB: "35"
+      # SMTPRELAY_EVENT_RETENTION_DAYS: "30"
+    volumes:
+      - smtprelay-data:/data               # database, encryption key and certificate live here
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  smtprelay-data:

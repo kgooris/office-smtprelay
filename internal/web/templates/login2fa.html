@@ -1,0 +1,13 @@
+{{define "content"}}
+<div class="card narrow">
+  <h1>{{t "login2fa.title"}}</h1>
+  <p class="muted">{{t "login2fa.intro"}}</p>
+  <form method="post" action="/login/2fa">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+    <label for="code">{{t "login2fa.code"}}</label>
+    <input id="code" type="text" name="code" inputmode="numeric" autocomplete="one-time-code" autofocus required>
+    <p class="hint">{{t "login2fa.hint"}}</p>
+    <p><button type="submit">{{t "login2fa.submit"}}</button></p>
+  </form>
+</div>
+{{end}}

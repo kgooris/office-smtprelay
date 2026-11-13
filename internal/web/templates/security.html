@@ -1,0 +1,71 @@
+{{define "content"}}
+<h1>{{t "security.title"}}</h1>
+<p class="muted">{{t "security.intro"}}</p>
+{{with .Data}}
+
+{{if .NewPass}}
+<div class="card">
+  <div class="flash warn">{{t "security.pass_once" .NewPassFor}}</div>
+  <p><span class="secret mono">{{.NewPass}}</span></p>
+</div>
+{{end}}
+
+<h2>{{t "security.users_title"}}</h2>
+<div class="scroll"><table class="stack">
+  <thead><tr><th>{{t "security.user"}}</th><th>{{t "security.role"}}</th><th>{{t "security.2fa"}}</th><th>{{t "security.last_login"}}</th><th>{{t "clients.actions"}}</th></tr></thead>
+  <tbody>
+  {{range .Users}}<tr>
+    <td data-label="{{t "security.user"}}">{{.Username}}{{if eq .ID $.Data.Me}} <span class="badge off">{{t "security.you"}}</span>{{end}}</td>
+    <td data-label="{{t "security.role"}}">
+      <form method="post" action="/security/user/role" class="inline">
+        <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="id" value="{{.ID}}">
+        <select name="role" aria-label="{{t "security.role"}}">
+          <option value="admin" {{if eq .Role "admin"}}selected{{end}}>{{t "role.admin"}}</option>
+          <option value="readonly" {{if eq .Role "readonly"}}selected{{end}}>{{t "role.readonly"}}</option>
+        </select>
+        <button class="small secondary" type="submit">{{t "security.change"}}</button>
+      </form>
+    </td>
+    <td data-label="{{t "security.2fa"}}">{{if .TOTPEnabled}}<span class="badge ok">{{t "totp.on"}}</span>{{else}}<span class="badge off">{{t "totp.off"}}</span>{{end}}</td>
+    <td data-label="{{t "security.last_login"}}">{{fmtTime .LastLogin}}</td>
+    <td data-label="{{t "clients.actions"}}">
+      <div class="actions">
+        <form method="post" action="/security/user/reset"><input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="id" value="{{.ID}}"><button class="small secondary" type="submit">{{t "clients.reset_password"}}</button></form>
+        {{if .TOTPEnabled}}<form method="post" action="/security/user/2fa-off"><input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="id" value="{{.ID}}"><button class="small secondary" type="submit">{{t "security.reset_2fa"}}</button></form>{{end}}
+      </div>
+      <form method="post" action="/security/user/delete" class="confirmdel"><input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="id" value="{{.ID}}"><label class="check"><input type="checkbox" required> {{t "confirm.sure"}}</label> <button class="small danger" type="submit">{{t "security.delete_confirm"}}</button></form>
+    </td>
+  </tr>{{end}}
+  </tbody>
+</table></div>
+
+<div class="card" style="margin-top:16px">
+  <h2 style="margin-top:0">{{t "security.add_title"}}</h2>
+  <form method="post" action="/security/user/add">
+    <input type="hidden" name="csrf" value="{{$.CSRF}}">
+    <div class="inline">
+      <div><label for="nu">{{t "security.user"}}</label><input id="nu" type="text" name="username" required autocomplete="off"></div>
+      <div><label for="nr">{{t "security.role"}}</label>
+        <select id="nr" name="role"><option value="readonly">{{t "role.readonly"}}</option><option value="admin">{{t "role.admin"}}</option></select></div>
+      <div><label for="np">{{t "security.password_optional"}}</label><input id="np" type="password" name="password" minlength="12" autocomplete="new-password"></div>
+    </div>
+    <p class="hint">{{t "security.add_hint"}}</p>
+    <p><button type="submit">{{t "security.add_button"}}</button></p>
+  </form>
+</div>
+
+<div class="card">
+  <h2 style="margin-top:0">{{t "security.access_title"}}</h2>
+  <form method="post" action="/security/access">
+    <input type="hidden" name="csrf" value="{{$.CSRF}}">
+    <label for="allow">{{t "security.allow"}}</label>
+    <input id="allow" type="text" name="allow" value="{{.Allow}}" placeholder="192.168.1.0/24, 192.168.1.5">
+    <p class="hint">{{t "security.allow_hint" .YourIP}}</p>
+    <label for="session">{{t "security.session"}}</label>
+    <input id="session" type="number" min="5" max="480" name="session" value="{{.Session}}" placeholder="30">
+    <p class="hint">{{t "security.session_hint"}}</p>
+    <p><button type="submit">{{t "security.save"}}</button></p>
+  </form>
+</div>
+{{end}}
+{{end}}

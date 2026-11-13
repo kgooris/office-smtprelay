@@ -1,0 +1,34 @@
+{{define "content"}}
+<div class="pagehead">
+  <h1>{{t "clients.title"}}</h1>
+  <a class="btn" href="/clients/new">{{t "clients.add_button"}}</a>
+</div>
+<p class="muted">{{t "clients.intro"}}</p>
+
+{{with .Data}}
+{{if .Clients}}
+<div class="scroll"><table class="stack">
+  <thead><tr><th>{{t "clients.name"}}</th><th>{{t "clients.ip"}}</th><th>{{t "clients.rules"}}</th><th>{{t "clients.status"}}</th><th>{{t "clients.last_seen"}}</th><th>{{t "clients.actions"}}</th></tr></thead>
+  <tbody>
+  {{range .Clients}}<tr>
+    <td data-label="{{t "clients.name"}}"><a href="/clients/edit?name={{.Name}}">{{.Name}}</a></td>
+    <td data-label="{{t "clients.ip"}}" class="mono">{{.AddrString}}</td>
+    <td data-label="{{t "clients.rules"}}">{{if .Policy.ActiveRules}}{{t "clients.rules_n" .Policy.ActiveRules}}{{else}}{{t "clients.rules_none"}}{{end}}{{if .Policy.TestRules}} <span class="badge off">{{t "clients.test_mode"}}</span>{{end}}</td>
+    <td data-label="{{t "clients.status"}}">{{if .Enabled}}<span class="badge ok">{{t "clients.enabled"}}</span>{{else}}<span class="badge off">{{t "clients.disabled"}}</span>{{end}}</td>
+    <td data-label="{{t "clients.last_seen"}}">{{fmtTime .LastSeen}}</td>
+    <td data-label="{{t "clients.actions"}}">
+      <div class="actions">
+        <a class="btn small" href="/clients/edit?name={{.Name}}">{{t "clients.edit"}}</a>
+        <form method="post" action="/clients/toggle">
+          <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="name" value="{{.Name}}">
+          <input type="hidden" name="enable" value="{{if .Enabled}}0{{else}}1{{end}}">
+          <button class="small secondary" type="submit">{{if .Enabled}}{{t "clients.disable"}}{{else}}{{t "clients.enable"}}{{end}}</button>
+        </form>
+      </div>
+    </td>
+  </tr>{{end}}
+  </tbody>
+</table></div>
+{{else}}<p class="muted">{{t "clients.none"}}</p>{{end}}
+{{end}}
+{{end}}

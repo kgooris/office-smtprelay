@@ -1,0 +1,73 @@
+{{define "content"}}
+<h1>{{t "dashboard.title"}}</h1>
+
+{{with .Data}}
+{{if not .GraphConfigured}}
+<div class="flash err">{{t "dashboard.ms_missing"}} <a href="/microsoft">{{t "dashboard.ms_setup"}}</a></div>
+{{else if eq .SecretState "expired"}}
+<div class="flash err">{{t "dashboard.secret_expired"}} <a href="/microsoft">{{t "dashboard.ms_manage"}}</a></div>
+{{else if eq .SecretState "soon"}}
+<div class="flash warn">{{t "dashboard.secret_soon" .SecretDays}} <a href="/microsoft">{{t "dashboard.ms_manage"}}</a></div>
+{{end}}
+{{if .Paused}}
+<div class="flash err">{{t "dashboard.paused"}}
+  <form method="post" action="/pause" style="display:inline">
+    <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="pause" value="0">
+    <button class="small" type="submit">{{t "dashboard.resume"}}</button>
+  </form>
+</div>
+{{end}}
+{{range .Blocked}}<div class="flash warn">{{t "dashboard.client_blocked" .}} <a href="/clients/edit?name={{.}}&tab=limits">{{t "dashboard.manage"}}</a></div>{{end}}
+{{if .TestHits7d}}<div class="flash warn">{{t "dashboard.test_hits" .TestHits7d}} <a href="/logs?status=test&period=7d">{{t "dashboard.view_log"}}</a></div>{{end}}
+{{if not .HasClients}}
+<div class="flash warn">{{t "dashboard.no_clients"}} <a href="/clients">{{t "dashboard.add_client"}}</a></div>
+{{end}}
+
+<div class="grid">
+  <div class="stat"><div class="n">{{len .Clients}}</div><div class="l">{{t "dashboard.clients"}}</div></div>
+  <div class="stat"><div class="n">{{.Sent24h}}</div><div class="l">{{t "dashboard.sent24h"}}</div></div>
+  <div class="stat"><div class="n">{{.Failures24h}}</div><div class="l"><a href="/logs?status=failed&period=24h">{{t "dashboard.failures24h"}}</a></div></div>
+  <div class="stat"><div class="n">{{.Unknown7d}}</div><div class="l"><a href="/devices">{{t "dashboard.unknown7d"}}</a></div></div>
+</div>
+
+<h2>{{t "dashboard.clients"}}</h2>
+{{if .Clients}}
+<div class="scroll"><table class="stack">
+  <thead><tr><th>{{t "clients.name"}}</th><th>{{t "clients.ip"}}</th><th>{{t "clients.status"}}</th><th>{{t "clients.last_sent"}}</th><th>{{t "clients.last_seen"}}</th></tr></thead>
+  <tbody>
+  {{range .Clients}}<tr>
+    <td data-label="{{t "clients.name"}}">{{.Name}}</td><td data-label="{{t "clients.ip"}}" class="mono">{{.AddrString}}</td>
+    <td data-label="{{t "clients.status"}}">{{if .Enabled}}<span class="badge ok">{{t "clients.enabled"}}</span>{{else}}<span class="badge off">{{t "clients.disabled"}}</span>{{end}}</td>
+    <td data-label="{{t "clients.last_sent"}}">{{fmtTime .LastSent}}</td><td data-label="{{t "clients.last_seen"}}">{{fmtTime .LastSeen}}</td>
+  </tr>{{end}}
+  </tbody>
+</table></div>
+{{else}}<p class="muted">{{t "clients.none"}}</p>{{end}}
+
+<h2>{{t "dashboard.recent_failures"}}</h2>
+{{if .Recent}}
+<div class="scroll"><table class="stack">
+  <thead><tr><th>{{t "logs.time"}}</th><th>{{t "logs.ip"}}</th><th>{{t "logs.client"}}</th><th>{{t "logs.result"}}</th></tr></thead>
+  <tbody>
+  {{range .Recent}}<tr>
+    <td data-label="{{t "logs.time"}}">{{fmtTime .LastAt}}{{if gt .Count 1}} <span class="muted">×{{.Count}}</span>{{end}}</td>
+    <td data-label="{{t "logs.ip"}}" class="mono">{{.RemoteIP}}</td><td data-label="{{t "logs.client"}}">{{.Client}}</td>
+    <td data-label="{{t "logs.result"}}"><span class="badge {{badge .Reason}}">{{t (printf "reason.%s" .Reason)}}</span></td>
+  </tr>{{end}}
+  </tbody>
+</table></div>
+<p><a href="/logs?status=failed">{{t "dashboard.all_failures"}}</a></p>
+{{else}}<p class="muted">{{t "dashboard.no_failures"}}</p>{{end}}
+
+{{if not .Paused}}
+<div class="card" style="margin-top:24px">
+  <h2 style="margin-top:0">{{t "dashboard.stop_title"}}</h2>
+  <p class="hint">{{t "dashboard.stop_hint"}}</p>
+  <form method="post" action="/pause">
+    <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="pause" value="1">
+    <button class="danger" type="submit">{{t "dashboard.stop_button"}}</button>
+  </form>
+</div>
+{{end}}
+{{end}}
+{{end}}

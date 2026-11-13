@@ -1,0 +1,82 @@
+{{define "content"}}
+<h1>{{t "conn.title"}}</h1>
+<p class="muted">{{t "conn.intro"}}</p>
+{{with .Data}}
+
+<div class="card">
+  <h2 style="margin-top:0">{{t "conn.cert_title"}}</h2>
+  {{if .CertAvail}}
+  {{if .Cert.Expired}}<div class="flash err">{{t "conn.cert_expired"}}</div>
+  {{else if .Cert.ExpiresSoon}}<div class="flash warn">{{t "conn.cert_soon"}}</div>{{end}}
+  <dl class="kv">
+    <dt>{{t "conn.cert_source"}}</dt>
+    <dd>{{if eq .Cert.Source "environment"}}{{t "conn.src_env"}}{{else if eq .Cert.Source "uploaded"}}{{t "conn.src_uploaded"}}{{else}}{{t "conn.src_generated"}}{{end}}</dd>
+    <dt>{{t "conn.cert_names"}}</dt><dd class="mono">{{.NamesText}}</dd>
+    <dt>{{t "conn.cert_valid_until"}}</dt><dd>{{fmtTime .Cert.NotAfter}}</dd>
+    <dt>{{t "conn.cert_fingerprint"}}</dt><dd class="mono">{{.Cert.Fingerprint}}</dd>
+  </dl>
+  {{if .Cert.SelfSigned}}<p class="hint">{{t "conn.selfsigned_hint"}}</p>{{end}}
+  {{end}}
+
+  {{if .CertManaged}}
+  <p class="hint">{{t "conn.cert_managed"}}</p>
+  {{else if .CertAvail}}
+  <h3>{{t "conn.upload_title"}}</h3>
+    <form method="post" action="/connection/cert" enctype="multipart/form-data">
+      <input type="hidden" name="csrf" value="{{$.CSRF}}">
+      <label for="cert">{{t "conn.cert_file"}}</label>
+      <input id="cert" type="file" name="cert" accept=".pem,.crt,.cer" required>
+      <label for="key">{{t "conn.key_file"}}</label>
+      <input id="key" type="file" name="key" accept=".pem,.key" required>
+      <p class="hint">{{t "conn.upload_hint"}}</p>
+      <p><button type="submit">{{t "conn.upload_button"}}</button></p>
+    </form>
+  <h3>{{t "conn.regen_title"}}</h3>
+    <form method="post" action="/connection/regenerate">
+      <input type="hidden" name="csrf" value="{{$.CSRF}}">
+      <label for="names">{{t "conn.regen_names"}}</label>
+      <input id="names" type="text" name="names" value="{{.NamesText}}" required>
+      <p class="hint">{{t "conn.regen_hint"}}</p>
+      <p><button type="submit" class="secondary">{{t "conn.regen_button"}}</button></p>
+    </form>
+  {{end}}
+</div>
+
+<div class="card">
+  <h2 style="margin-top:0">{{t "conn.min_title"}}</h2>
+  <p class="hint">{{t "conn.min_hint"}}</p>
+  <form method="post" action="/connection/tlsmin">
+    <input type="hidden" name="csrf" value="{{$.CSRF}}">
+    <label for="tls_min">{{t "conn.min_label"}}</label>
+    <select id="tls_min" name="tls_min">
+      <option value="" {{if eq .TLSMin ""}}selected{{end}}>{{t "conn.min_default"}} ({{.DefMin}})</option>
+      <option value="1.3" {{if eq .TLSMin "1.3"}}selected{{end}}>TLS 1.3</option>
+      <option value="1.2" {{if eq .TLSMin "1.2"}}selected{{end}}>TLS 1.2</option>
+      <option value="1.1" {{if eq .TLSMin "1.1"}}selected{{end}}>TLS 1.1 ({{t "conn.old"}})</option>
+      <option value="1.0" {{if eq .TLSMin "1.0"}}selected{{end}}>TLS 1.0 ({{t "conn.old"}})</option>
+    </select>
+    <p class="hint">{{t "conn.min_warn"}}</p>
+    <p><button type="submit">{{t "conn.save"}}</button></p>
+  </form>
+</div>
+
+<div class="card">
+  <h2 style="margin-top:0">{{t "conn.ports_title"}}</h2>
+  <p class="hint">{{t "conn.ports_hint" .MainPort}}</p>
+  <form method="post" action="/connection/ports">
+    <input type="hidden" name="csrf" value="{{$.CSRF}}">
+    <div class="inline">
+      <div><label for="implicit">{{t "conn.implicit"}}</label><input id="implicit" type="number" min="0" max="65535" name="implicit" value="{{.Implicit}}" placeholder="0">
+        <p class="hint">{{if .RunImplicit}}<span class="badge ok">{{t "conn.running"}} {{.RunImplicit}}</span>{{else}}<span class="badge off">{{t "conn.off"}}</span>{{end}}</p></div>
+      <div><label for="legacy">{{t "conn.legacy"}}</label><input id="legacy" type="number" min="0" max="65535" name="legacy" value="{{.Legacy}}" placeholder="0">
+        <p class="hint">{{if .RunLegacy}}<span class="badge warn">{{t "conn.running"}} {{.RunLegacy}}</span>{{else}}<span class="badge off">{{t "conn.off"}}</span>{{end}}</p></div>
+    </div>
+    <p class="hint">{{t "conn.legacy_warn"}}</p>
+    <p class="hint">{{t "conn.docker_hint"}}</p>
+    {{if or .Implicit .Legacy}}<pre>ports:
+{{.Snippet}}</pre>{{end}}
+    <p><button type="submit">{{t "conn.save"}}</button></p>
+  </form>
+</div>
+{{end}}
+{{end}}

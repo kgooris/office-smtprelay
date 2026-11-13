@@ -1,0 +1,29 @@
+{{define "content"}}
+{{with .Data}}
+<h1>{{t "clients.add_title"}}</h1>
+<p><a href="/clients">&larr; {{t "edit.back"}}</a></p>
+
+<div class="card">
+  <form method="post" action="/clients/add">
+    <input type="hidden" name="csrf" value="{{$.CSRF}}">
+    <div class="inline">
+      <div><label for="name">{{t "clients.name"}}</label><input id="name" type="text" name="name" value="{{.FormName}}" placeholder="Printer 1st floor" required></div>
+      <div><label for="ip">{{t "clients.ip"}}</label><input id="ip" type="text" name="ip" value="{{.FormIP}}" placeholder="192.168.1.50" required></div>
+      <div><label for="username">{{t "clients.username_optional"}}</label><input id="username" type="text" name="username" value="{{.FormUser}}" autocomplete="off"></div>
+    </div>
+    <p class="hint">{{t "clients.add_hint"}}</p>
+    <div class="inline">
+      <div><label for="preset">{{t "clients.preset"}}</label>
+        <select id="preset" name="preset">
+          <option value="basic" {{if or (eq .FormPreset "") (eq .FormPreset "basic")}}selected{{end}}>{{t "clients.preset_basic"}}</option>
+          <option value="recommended" {{if eq .FormPreset "recommended"}}selected{{end}}>{{t "clients.preset_recommended"}}</option>
+          <option value="strict" {{if eq .FormPreset "strict"}}selected{{end}}>{{t "clients.preset_strict"}}</option>
+        </select></div>
+      <div><label for="mailbox">{{t "clients.mailbox"}}</label><input id="mailbox" type="email" name="mailbox" value="{{.FormMailbox}}" placeholder="printer@yourdomain.com"></div>
+    </div>
+    <p class="hint">{{t "clients.preset_hint"}}</p>
+    <p><button type="submit">{{t "clients.add_submit"}}</button> <a class="btn secondary" href="/clients">{{t "edit.cancel"}}</a></p>
+  </form>
+</div>
+{{end}}
+{{end}}

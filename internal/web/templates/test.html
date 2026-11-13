@@ -1,0 +1,18 @@
+{{define "content"}}
+<h1>{{t "test.title"}}</h1>
+<p class="muted">{{t "test.intro"}}</p>
+<p class="hint">{{t "ms.wait_hint"}}</p>
+{{with .Data}}
+<div class="card">
+  <form method="post" action="/test">
+    <input type="hidden" name="csrf" value="{{$.CSRF}}">
+    <label for="from">{{t "test.from"}}</label>
+    <input id="from" type="email" name="from" value="{{.From}}" required>
+    <p class="hint">{{t "test.from_hint"}}</p>
+    <label for="to">{{t "test.to"}}</label>
+    <input id="to" type="email" name="to" value="{{.To}}" required>
+    <p><button type="submit">{{t "test.send"}}</button></p>
+  </form>
+</div>
+{{end}}
+{{end}}

@@ -1,0 +1,21 @@
+{{define "content"}}
+{{with .Data}}
+<h1>{{if .Reset}}{{t "created.title_reset"}}{{else}}{{t "created.title_new"}}{{end}}</h1>
+<div class="flash warn">{{t "created.once"}}</div>
+<div class="card">
+  <h2 style="margin-top:0">{{.Name}}</h2>
+  <dl class="kv">
+    <dt>{{t "created.server"}}</dt><dd class="mono">{{.Host}}</dd>
+    <dt>{{t "created.port"}}</dt><dd class="mono">{{.Port}}</dd>
+    <dt>{{t "created.security"}}</dt><dd>STARTTLS</dd>
+    <dt>{{t "created.auth"}}</dt><dd>{{t "created.auth_value"}}</dd>
+    <dt>{{t "clients.username"}}</dt><dd class="mono">{{.Username}}</dd>
+    <dt>{{t "created.password"}}</dt><dd><span class="secret mono">{{.Password}}</span></dd>
+    <dt>{{t "clients.ip"}}</dt><dd class="mono">{{.Addr}}</dd>
+  </dl>
+  <p class="hint">{{t "created.sender_hint"}}</p>
+  <p class="hint">{{t "created.cert_hint"}}</p>
+</div>
+<p><a class="btn" href="/clients">{{t "created.back"}}</a></p>
+{{end}}
+{{end}}

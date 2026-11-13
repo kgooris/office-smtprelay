@@ -1,0 +1,17 @@
+{{define "content"}}
+<h1>{{t "devices.title"}}</h1>
+<p class="muted">{{t "devices.intro"}}</p>
+{{with .Data}}
+{{if .Devices}}
+<div class="scroll"><table class="stack">
+  <thead><tr><th>{{t "logs.ip"}}</th><th>{{t "devices.attempts"}}</th><th>{{t "devices.first"}}</th><th>{{t "devices.last"}}</th><th></th></tr></thead>
+  <tbody>
+  {{range .Devices}}<tr>
+    <td data-label="{{t "logs.ip"}}" class="mono">{{.IP}}</td><td data-label="{{t "devices.attempts"}}">{{.Count}}</td><td data-label="{{t "devices.first"}}">{{fmtTime .FirstAt}}</td><td data-label="{{t "devices.last"}}">{{fmtTime .LastAt}}</td>
+    <td data-label=""><a class="btn secondary small" href="/clients/new?ip={{.IP}}">{{t "devices.add"}}</a></td>
+  </tr>{{end}}
+  </tbody>
+</table></div>
+{{else}}<p class="muted">{{t "devices.none"}}</p>{{end}}
+{{end}}
+{{end}}

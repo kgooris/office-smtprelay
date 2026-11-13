@@ -1,0 +1,4 @@
+{{define "content"}}
+<h1>{{t "help.title"}}</h1>
+{{if eq .Lang "nl"}}{{template "help_nl" .}}{{else}}{{template "help_en" .}}{{end}}
+{{end}}

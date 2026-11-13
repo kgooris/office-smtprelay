@@ -1,0 +1,17 @@
+.git
+.github
+.gitignore
+.gitattributes
+.env
+.env.*
+docs
+scripts
+*.md
+*.db
+*.db-*
+data
+secrets
+bin
+dist
+*.exe
+*.test

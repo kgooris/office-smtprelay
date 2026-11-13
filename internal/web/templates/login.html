@@ -1,0 +1,13 @@
+{{define "content"}}
+<div class="card narrow">
+  <h1>{{t "login.title"}}</h1>
+  <form method="post" action="/login">
+    <input type="hidden" name="csrf" value="{{.CSRF}}">
+    <label for="username">{{t "login.username"}}</label>
+    <input id="username" type="text" name="username" autocomplete="username" placeholder="admin">
+    <label for="password">{{t "login.password"}}</label>
+    <input id="password" type="password" name="password" autocomplete="current-password" autofocus required>
+    <p><button type="submit">{{t "login.submit"}}</button></p>
+  </form>
+</div>
+{{end}}

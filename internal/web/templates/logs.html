@@ -1,0 +1,55 @@
+{{define "content"}}
+<h1>{{t "logs.title"}}</h1>
+{{with .Data}}
+<form method="get" action="/logs" class="card">
+  <div class="inline">
+    <div><label for="status">{{t "logs.result"}}</label>
+      <select id="status" name="status">
+        <option value=""{{if eq .Status ""}} selected{{end}}>{{t "logs.status_all"}}</option>
+        <option value="failed"{{if eq .Status "failed"}} selected{{end}}>{{t "logs.status_failed"}}</option>
+        <option value="sent"{{if eq .Status "sent"}} selected{{end}}>{{t "logs.status_sent"}}</option>
+        <option value="test"{{if eq .Status "test"}} selected{{end}}>{{t "logs.status_test"}}</option>
+      </select></div>
+    <div><label for="period">{{t "logs.period"}}</label>
+      <select id="period" name="period">
+        {{range .Periods}}<option value="{{.Value}}"{{if eq .Value $.Data.Period}} selected{{end}}>{{t .Label}}</option>{{end}}
+      </select></div>
+    <div><label for="client">{{t "logs.client"}}</label>
+      <select id="client" name="client">
+        <option value="">{{t "logs.status_all"}}</option>
+        {{range .ClientNames}}<option value="{{.}}"{{if eq . $.Data.Client}} selected{{end}}>{{.}}</option>{{end}}
+      </select></div>
+    <div><label for="ip">{{t "logs.ip"}}</label><input id="ip" type="text" name="ip" value="{{.IP}}"></div>
+    <button type="submit">{{t "logs.filter"}}</button>
+    <a class="btn secondary" href="/logs.csv?status={{.Status}}&period={{.Period}}&client={{.Client}}&ip={{.IP}}">{{t "logs.export"}}</a>
+  </div>
+</form>
+
+{{if .Events}}
+<div class="scroll"><table class="stack">
+  <thead><tr><th>{{t "logs.time"}}</th><th>{{t "logs.ip"}}</th><th>{{t "logs.client"}}</th><th>{{t "logs.result"}}</th><th>{{t "logs.code"}}</th><th>{{t "logs.sender"}}</th><th>{{t "logs.rcpts"}}</th></tr></thead>
+  <tbody>
+  {{range .Events}}<tr>
+    <td data-label="{{t "logs.time"}}">{{fmtTime .LastAt}}{{if gt .Count 1}}<br><span class="muted">×{{.Count}} {{t "logs.since"}} {{fmtTime .FirstAt}}</span>{{end}}</td>
+    <td data-label="{{t "logs.ip"}}" class="mono">{{.RemoteIP}}</td>
+    <td data-label="{{t "logs.client"}}">{{.Client}}</td>
+    <td data-label="{{t "logs.result"}}">
+      <span class="badge {{badge .Reason}}">{{t (printf "reason.%s" .Reason)}}</span>
+      {{if ne (printf "%s" .Reason) "sent"}}
+      <p class="hint"><strong>{{t "logs.what_to_do"}}:</strong> {{t (printf "hint.%s" .Reason)}}</p>{{if .Detail}}<p class="hint mono">{{.Detail}}</p>{{end}}
+      {{end}}
+    </td>
+    <td data-label="{{t "logs.code"}}">{{.SMTPCode}}</td>
+    <td data-label="{{t "logs.sender"}}" class="mono">{{.Sender}}</td>
+    <td data-label="{{t "logs.rcpts"}}">{{if .Recipients}}{{.Recipients}}{{end}}</td>
+  </tr>{{end}}
+  </tbody>
+</table></div>
+<div class="pager">
+  {{if .Prev}}<a class="btn secondary" href="{{.Prev}}">{{t "logs.newer"}}</a>{{end}}
+  {{if .Next}}<a class="btn secondary" href="{{.Next}}">{{t "logs.older"}}</a>{{end}}
+</div>
+{{else}}<p class="muted">{{t "logs.none"}}</p>{{end}}
+<p class="hint">{{t "logs.retention" .RetentionDays}}</p>
+{{end}}
+{{end}}

@@ -1,0 +1,201 @@
+{{define "help_en"}}
+<div class="card">
+  <h2 style="margin-top:0">How it works</h2>
+  <p>Devices on your network (printers, scanners) send mail to this relay with a fixed IP address and a username and password. The relay forwards the mail to Microsoft 365 through the Microsoft Graph API using an app registration. No Microsoft password is stored on any device, and Security Defaults can stay on.</p>
+</div>
+
+<div class="card">
+  <h2 style="margin-top:0">Step-by-step overview</h2>
+  <ol>
+    <li><a href="#entra">Create the Microsoft Entra app</a> (about 10 minutes)</li>
+    <li><a href="#connect">Enter the values and check the connection</a></li>
+    <li><a href="#mailbox">Provide a sender mailbox</a></li>
+    <li><a href="#scope">Limit which mailboxes the app can send as</a> (recommended)</li>
+    <li><a href="#wait">Wait about 5 minutes</a></li>
+    <li><a href="#testmail">Send a test mail</a></li>
+    <li><a href="#device">Add and configure the device</a></li>
+    <li><a href="#rules">Rules per device (optional)</a></li>
+    <li><a href="#admin">Administration, notifications and security</a></li>
+    <li><a href="#network">Network and HTTPS</a></li>
+    <li><a href="#rotate">Renew the client secret in time</a></li>
+  </ol>
+  <p class="hint">Something wrong? See <a href="#problems">Troubleshooting</a> or open the <a href="/logs">Logs</a> page: Microsoft errors are listed there with an explanation.</p>
+</div>
+
+<div class="card" id="entra">
+  <h2 style="margin-top:0">1. Create the Microsoft Entra app</h2>
+  <p>You need an account that can create app registrations and grant admin consent (<em>Application Administrator</em> or <em>Global Administrator</em>). No Azure subscription and no extra licence are needed.</p>
+
+  <h3>Option A: in the portal</h3>
+  <ol>
+    <li>Open <strong>entra.microsoft.com</strong> → <strong>Entra ID</strong> → <strong>App registrations</strong> → <strong>New registration</strong>.</li>
+    <li>Name: <code>office-smtprelay</code>. Supported account types: <strong>Single tenant</strong>. Redirect URI: leave empty. Select <strong>Register</strong>.</li>
+    <li>From the overview page, copy the <strong>Application (client) ID</strong> and the <strong>Directory (tenant) ID</strong>.</li>
+    <li><strong>API permissions</strong> → <strong>Add a permission</strong> → <strong>Microsoft Graph</strong> → <strong>Application permissions</strong> → search <code>Mail.Send</code>, tick it, <strong>Add permissions</strong>. Do <em>not</em> add delegated permissions.</li>
+    <li>Select <strong>Grant admin consent for ...</strong> and confirm. The Status column must show a green check ("Granted for ...").</li>
+    <li><strong>Certificates &amp; secrets</strong> → <strong>Client secrets</strong> → <strong>New client secret</strong>. Choose an expiry (maximum 24 months).</li>
+    <li>Copy the secret <strong>Value</strong> <strong>immediately</strong>. It is shown only once. Do <em>not</em> copy the Secret ID.</li>
+  </ol>
+
+  <h3>Option B: with the helper script</h3>
+  <p>The script performs steps 1 to 7 above for you. It writes nothing to disk: the values are shown once on screen.</p>
+  <ol>
+    <li><a href="/static/Setup-EntraApp.ps1" download>Download Setup-EntraApp.ps1</a> to a Windows PC.</li>
+    <li>Open a <strong>normal PowerShell window</strong> (not an embedded terminal: the sign-in window needs a parent window) and run:</li>
+  </ol>
+<pre>Install-Module Microsoft.Graph.Applications -Scope CurrentUser   # once
+.\Setup-EntraApp.ps1                    # interactive sign-in
+.\Setup-EntraApp.ps1 -SecretMonths 12   # shorter secret lifetime
+.\Setup-EntraApp.ps1 -SkipConsent       # create the app, grant consent yourself (see step 4)</pre>
+  <p class="hint">Sign in with an administrator account and approve the requested permissions. If you get an execution policy error: <code>Set-ExecutionPolicy -Scope Process Bypass</code> in that same window.</p>
+</div>
+
+<div class="card" id="connect">
+  <h2 style="margin-top:0">2. Enter the values and check the connection</h2>
+  <ol>
+    <li>Open the <a href="/microsoft">Microsoft 365</a> page.</li>
+    <li>Enter the <strong>Tenant ID</strong>, <strong>Application (client) ID</strong>, the <strong>client secret</strong> and the <strong>expiry date</strong>, then press <em>Save</em>. The expiry date is optional, but with it the dashboard warns you 30 days before the secret expires.</li>
+    <li>Press <em>Check connection</em>. Green means Microsoft accepts the three values. It does <strong>not</strong> yet prove that sending mail is allowed.</li>
+  </ol>
+</div>
+
+<div class="card" id="mailbox">
+  <h2 style="margin-top:0">3. Provide a sender mailbox</h2>
+  <ul>
+    <li>The sender address of a device must be an <strong>existing mailbox</strong> in your tenant, for example <code>printer@yourdomain.com</code>.</li>
+    <li>A <strong>shared mailbox</strong> is enough and needs <strong>no licence</strong> (up to 50 GB). Sign-in does not have to be enabled on it and neither does SMTP AUTH: the relay never signs in as that mailbox.</li>
+    <li>Sent messages end up in the mailbox's <em>Sent Items</em>. With lots of mail it can fill up: set a retention policy if needed.</li>
+    <li>Make sure SPF, DKIM and DMARC for your domain are in place, as for any other outgoing mail.</li>
+  </ul>
+  <p>Create a shared mailbox in the Exchange admin center (<strong>Recipients</strong> → <strong>Mailboxes</strong> → <strong>Add a shared mailbox</strong>) or in Exchange Online PowerShell:</p>
+<pre>Connect-ExchangeOnline
+New-Mailbox -Shared -Name "Printer" -DisplayName "Printer" -PrimarySmtpAddress printer@yourdomain.com</pre>
+</div>
+
+<div class="card" id="scope">
+  <h2 style="margin-top:0">4. Limit which mailboxes the app can send as (recommended)</h2>
+  <p>Without a limit, <code>Mail.Send</code> (application permission) lets the app send as <strong>any</strong> mailbox in your tenant. If the secret leaks, someone could send as anyone in your organisation. <strong>Exchange Online RBAC for Applications</strong> limits it to the mailboxes you choose. For a small tenant with a trusted network you may skip this step.</p>
+  <p>You also need the <em>Exchange Administrator</em> role. Find the <strong>service principal Object ID</strong> in Entra under <strong>Enterprise applications</strong> → <code>office-smtprelay</code> → <strong>Overview</strong> (note: <em>not</em> the Object ID of the app registration).</p>
+  <ol>
+    <li>Create a <strong>mail-enabled security group</strong> (for example <code>smtp-relay-senders</code>) in the Exchange admin center and add the sender mailbox(es) as members.</li>
+    <li>Run this in Exchange Online PowerShell, adjusting the values:</li>
+  </ol>
+<pre>Connect-ExchangeOnline
+
+$appId = '&lt;Application (client) ID&gt;'
+$spId  = '&lt;Object ID of the ENTERPRISE APPLICATION (service principal)&gt;'
+
+# 1. Register the service principal in Exchange
+New-ServicePrincipal -AppId $appId -ObjectId $spId -DisplayName 'office-smtprelay'
+
+# 2. Create a scope with the allowed mailboxes
+$group = Get-DistributionGroup 'smtp-relay-senders'
+New-ManagementScope -Name 'SmtpRelaySenders' `
+  -RecipientRestrictionFilter "MemberOfGroup -eq '$($group.DistinguishedName)'"
+
+# 3. Allow the app to send mail only for that scope
+New-ManagementRoleAssignment -App $spId -Role 'Application Mail.Send' -CustomResourceScope 'SmtpRelaySenders'
+
+# 4. Verify (wait a few minutes if needed)
+Test-ServicePrincipalAuthorization -Identity $spId -Resource printer@yourdomain.com        # InScope = True
+Test-ServicePrincipalAuthorization -Identity $spId -Resource someone-else@yourdomain.com   # InScope = False</pre>
+  <ol start="3">
+    <li>Then revoke the <strong>tenant-wide Graph consent</strong> so that only the scoped Exchange assignment applies: Entra → <strong>Enterprise applications</strong> → <code>office-smtprelay</code> → <strong>Permissions</strong> → remove the consent for <code>Mail.Send</code>. (If you created the app with the script, use <code>-SkipConsent</code> next time.)</li>
+  </ol>
+</div>
+
+<div class="card" id="wait">
+  <h2 style="margin-top:0">5. Wait about 5 minutes</h2>
+  <p>New consent and permissions do <strong>not</strong> take effect immediately at Microsoft. Allow about <strong>5 minutes</strong>, sometimes up to <strong>30 minutes</strong> for Exchange role changes. A test mail that fails right after setup does not mean something is wrong: wait a little and try again.</p>
+</div>
+
+<div class="card" id="testmail">
+  <h2 style="margin-top:0">6. Send a test mail</h2>
+  <ol>
+    <li>Open the <a href="/test">Test mail</a> page.</li>
+    <li>Use the mailbox from step 3 as sender and your own address as recipient. Later, also try an external address.</li>
+    <li>Check that the mail arrives and does not land in junk.</li>
+    <li>Failed? The error is shown on screen <em>and</em> on the <a href="/logs">Logs</a> page (device "web UI"), with an explanation of what to do.</li>
+  </ol>
+  <p class="hint">The test mail goes straight to Microsoft, so it tests the Microsoft side, not the device.</p>
+</div>
+
+<div class="card" id="device">
+  <h2 style="margin-top:0">7. Add and configure the device</h2>
+  <ol>
+    <li>First give the device a <strong>fixed IP address</strong> in your router.</li>
+    <li>Add it on the <a href="/clients">Clients</a> page with that IP address. The password that appears is shown <strong>only once</strong>: write it down right away.</li>
+    <li>Enter these settings on the device:</li>
+  </ol>
+  <dl class="kv">
+    <dt>SMTP server</dt><dd class="mono">{{.Data.Host}}</dd>
+    <dt>Port</dt><dd class="mono">{{.Data.Port}}</dd>
+    <dt>Security</dt><dd>STARTTLS</dd>
+    <dt>Authentication</dt><dd>Required (PLAIN or LOGIN) with the username and password from the Clients page</dd>
+    <dt>Sender address</dt><dd>The existing mailbox from step 3</dd>
+  </dl>
+  <ol start="4">
+    <li>Send a test message from the device. If it fails, check <a href="/logs">Logs</a>: every refused message is listed with its reason.</li>
+  </ol>
+  <p class="hint">By default the relay uses a self-signed certificate. If the device refuses it, turn off certificate checking on the device or provide your own certificate. Very old devices that cannot do TLS 1.2 need the server setting <code>SMTPRELAY_TLS_MIN</code>.</p>
+</div>
+
+<div class="card" id="rules">
+  <h2 style="margin-top:0">Rules per device (optional)</h2>
+  <p>The relay is not an open relay: a device needs a known IP address <em>and</em> must sign in. On top of that you can set extra rules per device under <a href="/clients">Clients</a> → <em>Rules</em>. <strong>Nothing is required</strong>: a device without rules works exactly as before.</p>
+  <ul>
+    <li><strong>Sender:</strong> allow only certain addresses, or <em>rewrite</em> the sender to a single address. Rewriting never refuses and is ideal for printers that cannot set their sender.</li>
+    <li><strong>Recipients:</strong> only internal addresses (your own domains), or your own list. A hijacked device then cannot send spam outside.</li>
+    <li><strong>Limits:</strong> messages per hour and per day, recipients per message, maximum size. When exceeded the message is deferred, or the device is blocked for a few minutes.</li>
+    <li><strong>Message changes:</strong> a fixed Reply-To address and a subject prefix.</li>
+    <li><strong>Emergency stop</strong> on the dashboard: pauses all sending at once. Devices retry later.</li>
+  </ul>
+  <p><strong>How to do it safely:</strong> set a new rule to <em>Test mode</em> first. Violations are then only logged (Logs, filter <em>Rule hits</em>) and nothing is blocked. If after a few days the printer keeps to the rule, switch it to <em>On</em>.</p>
+</div>
+
+<div class="card" id="admin">
+  <h2 style="margin-top:0">Administration, notifications and securing the interface</h2>
+  <ul>
+    <li><strong><a href="/notifications">Notifications</a>:</strong> a short e-mail for Microsoft 365 problems, a secret about to expire, a blocked device or a pause. Off by default.</li>
+    <li><strong><a href="/connection">Connection</a>:</strong> replace the TLS certificate (upload one or have a new self-signed one created), the oldest accepted TLS version, and extra ports (SMTP over TLS, or without encryption for old devices). For an old device set an exception on its <em>Connection</em> tab instead of lowering everything.</li>
+    <li><strong><a href="/settings">General</a>:</strong> language, log retention, maximum message size, connections per address and your internal domains. Changes apply at once.</li>
+    <li><strong><a href="/backup">Backup</a>:</strong> download the devices, rules and settings as a file and restore them later, for example on another server. The Microsoft secret and the administrator passwords are deliberately not included.</li>
+    <li><strong><a href="/security">Security</a>:</strong> several users (<em>Administrator</em> or <em>Read-only</em>), allow only certain networks to open the interface, and the sign-out time. Under <a href="/account">Account</a> you switch on <strong>two-step verification</strong>: a code from an app, with recovery codes in case you lose your phone.</li>
+  </ul>
+  <p class="hint">Locked out? On the server these commands restore access: <code>docker exec office-smtprelay /office-smtprelay user passwd admin</code> (new password), <code>... user reset-2fa NAME</code> (two-step off) or <code>... user reset-access</code> (remove the network restriction).</p>
+</div>
+
+<div class="card" id="network">
+  <h2 style="margin-top:0">8. Network and HTTPS</h2>
+  <ul>
+    <li>Allow the SMTP port only from the IP addresses of your devices (firewall rule). The relay also checks the source IP itself.</li>
+    <li>This web interface speaks plain HTTP. Put a reverse proxy in front of it that handles HTTPS and set <code>SMTPRELAY_TRUST_PROXY=true</code>, so the real client IP and the HTTPS status are used.</li>
+  </ul>
+</div>
+
+<div class="card" id="rotate">
+  <h2 style="margin-top:0">9. Renew the client secret</h2>
+  <p>When the secret expires, all mail stops. The dashboard warns you 30 days ahead. To renew without interruption:</p>
+  <ol>
+    <li>Entra → <strong>App registrations</strong> → <code>office-smtprelay</code> → <strong>Certificates &amp; secrets</strong> → <strong>New client secret</strong>, and copy the <strong>Value</strong>.</li>
+    <li>Enter the new secret and the new expiry date on the <a href="/microsoft">Microsoft 365</a> page and press <em>Check connection</em>.</li>
+    <li>Send a test mail. If it works, delete the old secret in Entra.</li>
+  </ol>
+</div>
+
+<div class="card" id="problems">
+  <h2 style="margin-top:0">Troubleshooting</h2>
+  <table>
+    <thead><tr><th>Message</th><th>Most likely cause</th></tr></thead>
+    <tbody>
+      <tr><td><code>401</code> / <code>invalid_client</code></td><td>Wrong or expired secret, or the Secret ID was entered instead of the Value.</td></tr>
+      <tr><td><code>AADSTS700016</code></td><td>Wrong client ID or tenant ID.</td></tr>
+      <tr><td><code>403</code> / <code>ErrorAccessDenied</code></td><td>Admin consent missing, the sender is outside the RBAC scope, or the permissions are not applied yet (wait 5 to 30 minutes).</td></tr>
+      <tr><td><code>404</code> / <code>MailboxNotEnabledForRESTAPI</code></td><td>The sender address is not a mailbox in this tenant, or the mailbox is not synchronised yet.</td></tr>
+      <tr><td><code>429</code></td><td>Microsoft is throttling. The relay retries later.</td></tr>
+      <tr><td>Mail arrives but lands in junk</td><td>Check SPF, DKIM and DMARC for your domain.</td></tr>
+      <tr><td>Device is refused</td><td>See <a href="/logs">Logs</a>: wrong IP address, wrong password, or authentication is off on the device.</td></tr>
+    </tbody>
+  </table>
+</div>
+{{end}}

@@ -1,0 +1,44 @@
+{{define "content"}}
+<h1>{{t "ms.title"}}</h1>
+{{with .Data}}
+<div class="card">
+  <dl class="kv">
+    <dt>{{t "ms.status"}}</dt>
+    <dd>{{if not .Configured}}<span class="badge err">{{t "ms.not_configured"}}</span>
+        {{else if eq .SecretState "expired"}}<span class="badge err">{{t "ms.expired"}}</span>
+        {{else if eq .SecretState "soon"}}<span class="badge warn">{{t "ms.expires_soon" .SecretDays}}</span>
+        {{else}}<span class="badge ok">{{t "ms.configured"}}</span>{{end}}</dd>
+    {{if .Configured}}
+    <dt>{{t "ms.tenant"}}</dt><dd class="mono">{{.TenantID}}</dd>
+    <dt>{{t "ms.client"}}</dt><dd class="mono">{{.ClientID}}</dd>
+    <dt>{{t "ms.secret"}}</dt><dd>{{t "ms.secret_stored"}}{{if .HasExpiry}} · {{t "ms.expires_on" .ExpiresText}}{{end}}</dd>
+    {{end}}
+  </dl>
+  {{if .Configured}}
+  <form method="post" action="/microsoft/check" style="margin-top:12px">
+    <input type="hidden" name="csrf" value="{{$.CSRF}}">
+    <button type="submit" class="secondary">{{t "ms.check"}}</button>
+  </form>
+  {{end}}
+</div>
+
+<div class="card">
+  <h2 style="margin-top:0">{{if .Configured}}{{t "ms.update_title"}}{{else}}{{t "ms.setup_title"}}{{end}}</h2>
+  <p>{{t "ms.setup_intro"}} <a href="/help#entra">{{t "ms.setup_link"}}</a></p>
+  <form method="post" action="/microsoft/save">
+    <input type="hidden" name="csrf" value="{{$.CSRF}}">
+    <label for="tenant">{{t "ms.tenant"}}</label>
+    <input id="tenant" type="text" name="tenant" value="{{.TenantID}}" autocomplete="off" required>
+    <label for="client">{{t "ms.client"}}</label>
+    <input id="client" type="text" name="client" value="{{.ClientID}}" autocomplete="off" required>
+    <label for="secret">{{t "ms.secret"}}</label>
+    <input id="secret" type="password" name="secret" autocomplete="off"{{if not .Configured}} required{{end}}>
+    {{if .Configured}}<p class="hint">{{t "ms.secret_keep"}}</p>{{end}}
+    <label for="expires">{{t "ms.expires_label"}}</label>
+    <input id="expires" type="date" name="expires" value="{{.ExpiresInput}}">
+    <p class="hint">{{t "ms.expires_hint"}}</p>
+    <p><button type="submit">{{t "ms.save"}}</button></p>
+  </form>
+</div>
+{{end}}
+{{end}}

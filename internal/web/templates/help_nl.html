@@ -1,0 +1,201 @@
+{{define "help_nl"}}
+<div class="card">
+  <h2 style="margin-top:0">Hoe werkt het</h2>
+  <p>Toestellen in je netwerk (printers, scanners) sturen mail naar deze relay met een vast IP-adres en een gebruikersnaam en wachtwoord. De relay stuurt de mail door naar Microsoft 365 via de Microsoft Graph API met een app-registratie. Er staat dus geen Microsoft-wachtwoord op een toestel en Security Defaults kunnen aan blijven.</p>
+</div>
+
+<div class="card">
+  <h2 style="margin-top:0">Stappenplan in het kort</h2>
+  <ol>
+    <li><a href="#entra">De Microsoft Entra-app aanmaken</a> (ongeveer 10 minuten)</li>
+    <li><a href="#connect">De gegevens invullen en de verbinding controleren</a></li>
+    <li><a href="#mailbox">Een afzender-mailbox voorzien</a></li>
+    <li><a href="#scope">Beperken als welke mailboxen de app mag versturen</a> (aanbevolen)</li>
+    <li><a href="#wait">Ongeveer 5 minuten wachten</a></li>
+    <li><a href="#testmail">Een testmail versturen</a></li>
+    <li><a href="#device">Het toestel toevoegen en instellen</a></li>
+    <li><a href="#rules">Regels per toestel (optioneel)</a></li>
+    <li><a href="#admin">Beheer, meldingen en beveiliging</a></li>
+    <li><a href="#network">Netwerk en HTTPS</a></li>
+    <li><a href="#rotate">Het client secret tijdig vernieuwen</a></li>
+  </ol>
+  <p class="hint">Loopt er iets mis? Zie <a href="#problems">Problemen oplossen</a> of kijk op de pagina <a href="/logs">Logboek</a>: fouten van Microsoft staan daar met uitleg.</p>
+</div>
+
+<div class="card" id="entra">
+  <h2 style="margin-top:0">1. De Microsoft Entra-app aanmaken</h2>
+  <p>Je hebt een account nodig dat app-registraties mag maken en beheerderstoestemming mag geven (<em>Application Administrator</em> of <em>Global Administrator</em>). Je hebt geen Azure-abonnement en geen extra licentie nodig.</p>
+
+  <h3>Optie A: in de portal</h3>
+  <ol>
+    <li>Open <strong>entra.microsoft.com</strong> → <strong>Entra ID</strong> → <strong>App registrations</strong> → <strong>New registration</strong>.</li>
+    <li>Naam: <code>office-smtprelay</code>. Account types: <strong>Single tenant</strong> (alleen deze map). Redirect-URI: leeg laten. Klik op <strong>Register</strong>.</li>
+    <li>Kopieer van de overzichtspagina het <strong>Application (client) ID</strong> en het <strong>Directory (tenant) ID</strong>.</li>
+    <li><strong>API permissions</strong> → <strong>Add a permission</strong> → <strong>Microsoft Graph</strong> → <strong>Application permissions</strong> → zoek <code>Mail.Send</code>, vink aan, <strong>Add permissions</strong>. Voeg <em>geen</em> Delegated permissions toe.</li>
+    <li>Klik op <strong>Grant admin consent for ...</strong> en bevestig. In de kolom Status moet een groen vinkje staan ("Granted for ...").</li>
+    <li><strong>Certificates &amp; secrets</strong> → <strong>Client secrets</strong> → <strong>New client secret</strong>. Kies een vervaldatum (maximaal 24 maanden).</li>
+    <li>Kopieer <strong>meteen</strong> de kolom <strong>Value</strong> van het secret. Die wordt maar één keer getoond. Kopieer <em>niet</em> het Secret ID.</li>
+  </ol>
+
+  <h3>Optie B: met het hulpscript</h3>
+  <p>Het script doet stap 1 t/m 7 hierboven voor je. Het schrijft niets naar schijf: de waarden verschijnen eenmalig op het scherm.</p>
+  <ol>
+    <li><a href="/static/Setup-EntraApp.ps1" download>Download Setup-EntraApp.ps1</a> naar een Windows-pc.</li>
+    <li>Open een <strong>gewoon PowerShell-venster</strong> (geen ingebouwde terminal: het aanmeldvenster heeft een bovenliggend venster nodig) en voer uit:</li>
+  </ol>
+<pre>Install-Module Microsoft.Graph.Applications -Scope CurrentUser   # eenmalig
+.\Setup-EntraApp.ps1                    # interactief aanmelden
+.\Setup-EntraApp.ps1 -SecretMonths 12   # kortere levensduur van het secret
+.\Setup-EntraApp.ps1 -SkipConsent       # app maken, toestemming zelf geven (zie stap 4)</pre>
+  <p class="hint">Meld aan met een beheerdersaccount en keur de gevraagde rechten goed. Bij een foutmelding over uitvoeringsbeleid: <code>Set-ExecutionPolicy -Scope Process Bypass</code> in datzelfde venster.</p>
+</div>
+
+<div class="card" id="connect">
+  <h2 style="margin-top:0">2. De gegevens invullen en de verbinding controleren</h2>
+  <ol>
+    <li>Open de pagina <a href="/microsoft">Microsoft 365</a>.</li>
+    <li>Vul <strong>Tenant ID</strong>, <strong>Application (client) ID</strong>, het <strong>client secret</strong> en de <strong>vervaldatum</strong> in en klik op <em>Opslaan</em>. De vervaldatum is optioneel, maar dan waarschuwt het dashboard je 30 dagen vóór het secret verloopt.</li>
+    <li>Klik op <em>Verbinding controleren</em>. Groen betekent dat Microsoft de drie gegevens aanvaardt. Dit test nog <strong>niet</strong> of er daadwerkelijk mail verstuurd mag worden.</li>
+  </ol>
+</div>
+
+<div class="card" id="mailbox">
+  <h2 style="margin-top:0">3. Een afzender-mailbox voorzien</h2>
+  <ul>
+    <li>Het afzenderadres van een toestel moet een <strong>bestaande mailbox</strong> in je tenant zijn, bijvoorbeeld <code>printer@jouwdomein.be</code>.</li>
+    <li>Een <strong>gedeelde mailbox</strong> (shared mailbox) volstaat en heeft <strong>geen licentie</strong> nodig (tot 50 GB). Aanmelden op die mailbox hoeft niet aan te staan en SMTP AUTH ook niet: de relay meldt nooit aan als die mailbox.</li>
+    <li>Verstuurde mails komen in <em>Verzonden items</em> van die mailbox. Bij veel mail kan die volgelopen raken: stel eventueel een bewaarbeleid in.</li>
+    <li>Zorg dat SPF, DKIM en DMARC van je domein in orde zijn, zoals voor alle andere uitgaande mail.</li>
+  </ul>
+  <p>Een gedeelde mailbox maak je in het Exchange admin center (<strong>Recipients</strong> → <strong>Mailboxes</strong> → <strong>Add a shared mailbox</strong>) of in Exchange Online PowerShell:</p>
+<pre>Connect-ExchangeOnline
+New-Mailbox -Shared -Name "Printer" -DisplayName "Printer" -PrimarySmtpAddress printer@jouwdomein.be</pre>
+</div>
+
+<div class="card" id="scope">
+  <h2 style="margin-top:0">4. Beperken als welke mailboxen de app mag versturen (aanbevolen)</h2>
+  <p>Zonder beperking laat <code>Mail.Send</code> (applicatierecht) de app versturen als <strong>elke</strong> mailbox in je tenant. Lekt het secret, dan kan iemand mailen als eender wie in je organisatie. Met <strong>Exchange Online RBAC for Applications</strong> beperk je dat tot de mailboxen die je kiest. Bij een kleine tenant met een vertrouwd netwerk mag je deze stap overslaan.</p>
+  <p>Je hebt ook de rol <em>Exchange Administrator</em> nodig. De <strong>Object ID van de service principal</strong> vind je in Entra onder <strong>Enterprise applications</strong> → <code>office-smtprelay</code> → <strong>Overview</strong> (let op: <em>niet</em> de Object ID van de app-registratie).</p>
+  <ol>
+    <li>Maak een <strong>mail-ingeschakelde beveiligingsgroep</strong> (bijvoorbeeld <code>smtp-relay-senders</code>) in het Exchange admin center en voeg de afzender-mailbox(en) toe als lid.</li>
+    <li>Voer in Exchange Online PowerShell uit en pas de waarden aan:</li>
+  </ol>
+<pre>Connect-ExchangeOnline
+
+$appId = '&lt;Application (client) ID&gt;'
+$spId  = '&lt;Object ID van de ENTERPRISE APPLICATION (service principal)&gt;'
+
+# 1. De service principal in Exchange registreren
+New-ServicePrincipal -AppId $appId -ObjectId $spId -DisplayName 'office-smtprelay'
+
+# 2. Een bereik (scope) maken met de toegelaten mailboxen
+$group = Get-DistributionGroup 'smtp-relay-senders'
+New-ManagementScope -Name 'SmtpRelaySenders' `
+  -RecipientRestrictionFilter "MemberOfGroup -eq '$($group.DistinguishedName)'"
+
+# 3. De app enkel voor dat bereik laten versturen
+New-ManagementRoleAssignment -App $spId -Role 'Application Mail.Send' -CustomResourceScope 'SmtpRelaySenders'
+
+# 4. Controleren (wacht eventueel enkele minuten)
+Test-ServicePrincipalAuthorization -Identity $spId -Resource printer@jouwdomein.be        # InScope = True
+Test-ServicePrincipalAuthorization -Identity $spId -Resource iemand-anders@jouwdomein.be  # InScope = False</pre>
+  <ol start="3">
+    <li>Trek daarna de <strong>tenantbrede Graph-toestemming</strong> in, zodat enkel de beperkte Exchange-toewijzing geldt: Entra → <strong>Enterprise applications</strong> → <code>office-smtprelay</code> → <strong>Permissions</strong> → verwijder de toestemming voor <code>Mail.Send</code>. (Maakte je de app met het script, gebruik dan de volgende keer <code>-SkipConsent</code>.)</li>
+  </ol>
+</div>
+
+<div class="card" id="wait">
+  <h2 style="margin-top:0">5. Ongeveer 5 minuten wachten</h2>
+  <p>Nieuwe toestemmingen en rechten werken bij Microsoft <strong>niet meteen</strong>. Reken op ongeveer <strong>5 minuten</strong>, soms tot <strong>30 minuten</strong> bij Exchange-rolwijzigingen. Een testmail die direct na het instellen faalt, betekent dus niet dat er iets fout staat: wacht even en probeer opnieuw.</p>
+</div>
+
+<div class="card" id="testmail">
+  <h2 style="margin-top:0">6. Een testmail versturen</h2>
+  <ol>
+    <li>Open de pagina <a href="/test">Testmail</a>.</li>
+    <li>Kies als afzender de mailbox uit stap 3 en als ontvanger je eigen adres. Probeer later ook een extern adres.</li>
+    <li>Controleer of de mail binnenkomt en niet in de ongewenste mail belandt.</li>
+    <li>Mislukt het? De foutmelding staat op het scherm én op de pagina <a href="/logs">Logboek</a> (toestel "web UI"), met uitleg wat je kan doen.</li>
+  </ol>
+  <p class="hint">De testmail gaat rechtstreeks naar Microsoft en test dus de Microsoft-kant, niet het toestel.</p>
+</div>
+
+<div class="card" id="device">
+  <h2 style="margin-top:0">7. Het toestel toevoegen en instellen</h2>
+  <ol>
+    <li>Geef het toestel eerst een <strong>vast IP-adres</strong> in je router.</li>
+    <li>Voeg het toe op de pagina <a href="/clients">Toestellen</a> met dat IP-adres. Het wachtwoord dat daarna verschijnt, wordt <strong>maar één keer</strong> getoond: noteer het meteen.</li>
+    <li>Voer deze instellingen in op het toestel:</li>
+  </ol>
+  <dl class="kv">
+    <dt>SMTP-server</dt><dd class="mono">{{.Data.Host}}</dd>
+    <dt>Poort</dt><dd class="mono">{{.Data.Port}}</dd>
+    <dt>Beveiliging</dt><dd>STARTTLS</dd>
+    <dt>Authenticatie</dt><dd>Vereist (PLAIN of LOGIN) met de gebruikersnaam en het wachtwoord van de pagina Toestellen</dd>
+    <dt>Afzenderadres</dt><dd>De bestaande mailbox uit stap 3</dd>
+  </dl>
+  <ol start="4">
+    <li>Stuur vanaf het toestel een testbericht. Mislukt dat, bekijk dan <a href="/logs">Logboek</a>: elk geweigerd bericht staat er met de reden.</li>
+  </ol>
+  <p class="hint">De relay gebruikt standaard een zelfondertekend certificaat. Weigert het toestel dat, zet dan de certificaatcontrole op het toestel uit of voorzie een eigen certificaat. Zeer oude toestellen die geen TLS 1.2 kunnen, vragen de serverinstelling <code>SMTPRELAY_TLS_MIN</code>.</p>
+</div>
+
+<div class="card" id="rules">
+  <h2 style="margin-top:0">Regels per toestel (optioneel)</h2>
+  <p>De relay is geen open relay: een toestel moet een bekend IP-adres hebben én inloggen. Daarbovenop kan je per toestel extra regels instellen via <a href="/clients">Toestellen</a> → <em>Regels</em>. Er is <strong>niets verplicht</strong>: een toestel zonder regels werkt zoals altijd.</p>
+  <ul>
+    <li><strong>Afzender:</strong> toelaten van bepaalde adressen, of de afzender <em>herschrijven</em> naar één adres. Herschrijven weigert nooit en is ideaal voor printers die hun afzender niet kunnen instellen.</li>
+    <li><strong>Ontvangers:</strong> enkel interne adressen (je eigen domeinen), of een eigen lijst. Een gekaapt toestel kan dan geen spam naar buiten sturen.</li>
+    <li><strong>Limieten:</strong> berichten per uur en per dag, ontvangers per bericht, maximale grootte. Bij overschrijding wordt het bericht uitgesteld, of het toestel enkele minuten geblokkeerd.</li>
+    <li><strong>Aanpassingen:</strong> een vast Reply-To-adres en een voorvoegsel in het onderwerp.</li>
+    <li><strong>Noodknop</strong> op het overzicht: pauzeert alle verzending in één keer. Toestellen proberen later opnieuw.</li>
+  </ul>
+  <p><strong>Zo ga je veilig te werk:</strong> zet een nieuwe regel eerst op <em>Testmodus</em>. Overtredingen worden dan alleen gelogd (Logboek, filter <em>Regeloverschrijdingen</em>) en niets wordt geblokkeerd. Zie je na een paar dagen dat de printer zich aan de regel houdt, zet de regel dan op <em>Aan</em>.</p>
+</div>
+
+<div class="card" id="admin">
+  <h2 style="margin-top:0">Beheer, meldingen en beveiliging van de interface</h2>
+  <ul>
+    <li><strong><a href="/notifications">Meldingen</a>:</strong> een korte mail bij problemen met Microsoft 365, een bijna verlopen secret, een geblokkeerd toestel of een pauze. Staat standaard uit.</li>
+    <li><strong><a href="/connection">Verbinding</a>:</strong> het TLS-certificaat vervangen (uploaden of opnieuw zelf laten maken), de oudste toegelaten TLS-versie, en extra poorten (SMTP over TLS, of zonder versleuteling voor oude toestellen). Voor een oud toestel stel je op het tabblad <em>Verbinding</em> van dat toestel een uitzondering in, in plaats van alles te verlagen.</li>
+    <li><strong><a href="/settings">Algemeen</a>:</strong> taal, bewaartermijn van het logboek, maximale berichtgrootte, verbindingen per adres en je interne domeinen. Wijzigingen gelden meteen.</li>
+    <li><strong><a href="/backup">Back-up</a>:</strong> download de toestellen, regels en instellingen als bestand en herstel ze later, bijvoorbeeld op een andere server. Het Microsoft-secret en de beheerderswachtwoorden zitten er bewust niet in.</li>
+    <li><strong><a href="/security">Beveiliging</a>:</strong> meerdere gebruikers (<em>Beheerder</em> of <em>Alleen lezen</em>), enkel bepaalde netwerken toelaten om de interface te openen, en de afmeldtijd. Bij <a href="/account">Account</a> zet je <strong>tweestapsverificatie</strong> aan: een code uit een app, met herstelcodes voor als je je telefoon kwijtraakt.</li>
+  </ul>
+  <p class="hint">Buitengesloten? Op de server herstelt dit commando de toegang: <code>docker exec office-smtprelay /office-smtprelay user passwd admin</code> (nieuw wachtwoord), <code>... user reset-2fa NAAM</code> (tweestaps uit) of <code>... user reset-access</code> (netwerkbeperking weg).</p>
+</div>
+
+<div class="card" id="network">
+  <h2 style="margin-top:0">8. Netwerk en HTTPS</h2>
+  <ul>
+    <li>Sta de SMTP-poort enkel toe vanaf de IP-adressen van je toestellen (firewallregel). De relay controleert zelf ook het bron-IP.</li>
+    <li>Deze webinterface spreekt gewone HTTP. Zet er een reverse proxy voor die HTTPS afhandelt en stel <code>SMTPRELAY_TRUST_PROXY=true</code> in, zodat het echte client-IP en de HTTPS-status gebruikt worden.</li>
+  </ul>
+</div>
+
+<div class="card" id="rotate">
+  <h2 style="margin-top:0">9. Het client secret vernieuwen</h2>
+  <p>Verloopt het secret, dan stopt alle mail. Het dashboard waarschuwt je 30 dagen vooraf. Vernieuwen zonder onderbreking:</p>
+  <ol>
+    <li>Entra → <strong>App registrations</strong> → <code>office-smtprelay</code> → <strong>Certificates &amp; secrets</strong> → <strong>New client secret</strong>, en kopieer de <strong>Value</strong>.</li>
+    <li>Vul het nieuwe secret en de nieuwe vervaldatum in op de pagina <a href="/microsoft">Microsoft 365</a> en klik op <em>Verbinding controleren</em>.</li>
+    <li>Verstuur een testmail. Werkt die, verwijder dan het oude secret in Entra.</li>
+  </ol>
+</div>
+
+<div class="card" id="problems">
+  <h2 style="margin-top:0">Problemen oplossen</h2>
+  <table>
+    <thead><tr><th>Melding</th><th>Meest waarschijnlijke oorzaak</th></tr></thead>
+    <tbody>
+      <tr><td><code>401</code> / <code>invalid_client</code></td><td>Verkeerd of verlopen secret, of het Secret ID werd ingevuld in plaats van de Value.</td></tr>
+      <tr><td><code>AADSTS700016</code></td><td>Verkeerd client-ID of tenant-ID.</td></tr>
+      <tr><td><code>403</code> / <code>ErrorAccessDenied</code></td><td>Beheerderstoestemming ontbreekt, de afzender zit buiten het RBAC-bereik, of de rechten zijn nog niet doorgevoerd (wacht 5 tot 30 minuten).</td></tr>
+      <tr><td><code>404</code> / <code>MailboxNotEnabledForRESTAPI</code></td><td>Het afzenderadres is geen mailbox in deze tenant, of de mailbox is nog niet gesynchroniseerd.</td></tr>
+      <tr><td><code>429</code></td><td>Microsoft beperkt het tempo. De relay probeert later opnieuw.</td></tr>
+      <tr><td>Mail komt aan maar in de ongewenste mail</td><td>Controleer SPF, DKIM en DMARC van je domein.</td></tr>
+      <tr><td>Toestel wordt geweigerd</td><td>Zie <a href="/logs">Logboek</a>: verkeerd IP-adres, wachtwoord of authenticatie staat uit op het toestel.</td></tr>
+    </tbody>
+  </table>
+</div>
+{{end}}

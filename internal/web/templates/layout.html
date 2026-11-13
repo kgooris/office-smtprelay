@@ -1,0 +1,72 @@
+{{define "layout"}}<!doctype html>
+<html lang="{{.Lang}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>{{t .TitleKey}} · office-smtprelay</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+{{if .Nav}}
+<div class="app">
+  <aside class="side">
+    <input type="checkbox" id="navtoggle" class="navtoggle" aria-label="{{t "nav.menu"}}">
+    <div class="sidehead">
+      <span class="brand">office-smtprelay</span>
+      <label for="navtoggle" class="burger" aria-hidden="true"><span></span><span></span><span></span></label>
+    </div>
+    <div class="menu">
+      <nav aria-label="{{t "nav.label"}}">
+        <a href="/"{{if eq .Active "dashboard"}} aria-current="page"{{end}}>{{t "nav.dashboard"}}</a>
+
+        <div class="navgroup">{{t "nav.group_devices"}}</div>
+        <a href="/clients"{{if eq .Active "clients"}} aria-current="page"{{end}}>{{t "nav.clients"}}</a>
+        <a href="/devices"{{if eq .Active "devices"}} aria-current="page"{{end}}>{{t "nav.devices"}}</a>
+
+        <div class="navgroup">{{t "nav.group_mail"}}</div>
+        <a href="/logs"{{if eq .Active "logs"}} aria-current="page"{{end}}>{{t "nav.logs"}}</a>
+        <a href="/test"{{if eq .Active "test"}} aria-current="page"{{end}}>{{t "nav.test"}}</a>
+
+        <div class="navgroup">{{t "nav.group_settings"}}</div>
+        <a href="/settings"{{if eq .Active "settings"}} aria-current="page"{{end}}>{{t "nav.settings"}}</a>
+        <a href="/connection"{{if eq .Active "connection"}} aria-current="page"{{end}}>{{t "nav.connection"}}</a>
+        <a href="/microsoft"{{if eq .Active "microsoft"}} aria-current="page"{{end}}>{{t "nav.microsoft"}}</a>
+        {{if .IsAdmin}}<a href="/security"{{if eq .Active "security"}} aria-current="page"{{end}}>{{t "nav.security"}}</a>
+        {{end}}<a href="/notifications"{{if eq .Active "notifications"}} aria-current="page"{{end}}>{{t "nav.notifications"}}</a>
+        <a href="/backup"{{if eq .Active "backup"}} aria-current="page"{{end}}>{{t "nav.backup"}}</a>
+
+        <div class="navgroup">{{t "nav.group_help"}}</div>
+        <a href="/help"{{if eq .Active "help"}} aria-current="page"{{end}}>{{t "nav.help"}}</a>
+      </nav>
+      <div class="sidefoot">
+        <a href="/account"{{if eq .Active "account"}} aria-current="page"{{end}}>{{t "nav.account"}}{{if .UserName}} ({{.UserName}}){{end}}</a>
+        <div class="tools">
+          {{template "langswitch" .}}
+          <form method="post" action="/logout"><input type="hidden" name="csrf" value="{{.CSRF}}"><button class="link" type="submit">{{t "nav.logout"}}</button></form>
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="content">
+    <main>
+    {{if .Flash}}<div class="flash {{.FlashKind}}" role="status">{{.Flash}}</div>{{end}}
+    {{template "content" .}}
+    </main>
+    <footer>office-smtprelay {{.Version}}</footer>
+  </div>
+</div>
+{{else}}
+<main>
+{{if .Flash}}<div class="flash {{.FlashKind}}" role="status">{{.Flash}}</div>{{end}}
+{{template "content" .}}
+</main>
+<footer>office-smtprelay {{.Version}} · {{template "langswitch" .}}</footer>
+{{end}}
+</body>
+</html>{{end}}
+
+{{define "langswitch"}}<form method="post" action="/lang" aria-label="{{t "nav.language"}}">
+  <input type="hidden" name="next" value="{{.Path}}">
+  {{range .Languages}}<button class="small{{if ne . $.Lang}} secondary{{end}}" type="submit" name="lang" value="{{.}}"{{if eq . $.Lang}} aria-current="true"{{end}}>{{upper .}}</button> {{end}}
+</form>{{end}}

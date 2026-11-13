@@ -1,0 +1,199 @@
+{{define "content"}}
+{{with .Data}}
+<div class="pagehead">
+  <h1>{{.Name}} {{if .Enabled}}<span class="badge ok">{{t "clients.enabled"}}</span>{{else}}<span class="badge off">{{t "clients.disabled"}}</span>{{end}}</h1>
+  <a href="/clients">&larr; {{t "edit.back"}}</a>
+</div>
+
+{{if not .BlockedUntil.IsZero}}
+<div class="flash warn">
+  {{t "edit.blocked" (fmtTime .BlockedUntil)}}
+  <form method="post" action="/clients/unblock" style="display:inline">
+    <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="name" value="{{.Name}}">
+    <button class="small secondary" type="submit">{{t "edit.unblock"}}</button>
+  </form>
+</div>
+{{end}}
+
+<nav class="tabs" aria-label="{{t "edit.tabs"}}">
+  <a href="/clients/edit?name={{.Name}}&tab=general"{{if eq .Tab "general"}} aria-current="page"{{end}}>{{t "edit.tab_general"}}</a>
+  <a href="/clients/edit?name={{.Name}}&tab=sender"{{if eq .Tab "sender"}} aria-current="page"{{end}}>{{t "edit.tab_sender"}}{{if .SenderMode}} <span class="dot"></span>{{end}}</a>
+  <a href="/clients/edit?name={{.Name}}&tab=recipients"{{if eq .Tab "recipients"}} aria-current="page"{{end}}>{{t "edit.tab_recipients"}}{{if .RcptMode}} <span class="dot"></span>{{end}}</a>
+  <a href="/clients/edit?name={{.Name}}&tab=limits"{{if eq .Tab "limits"}} aria-current="page"{{end}}>{{t "edit.tab_limits"}}{{if .LimMode}} <span class="dot"></span>{{end}}</a>
+  <a href="/clients/edit?name={{.Name}}&tab=messages"{{if eq .Tab "messages"}} aria-current="page"{{end}}>{{t "edit.tab_messages"}}{{if or .ReplyTo .SubjectTag .Bcc .AttachMode}} <span class="dot"></span>{{end}}</a>
+  <a href="/clients/edit?name={{.Name}}&tab=connection"{{if eq .Tab "connection"}} aria-current="page"{{end}}>{{t "edit.tab_connection"}}{{if or .TLSMin .TLSPlain}} <span class="dot"></span>{{end}}</a>
+</nav>
+
+{{if eq .Tab "general"}}
+<div class="card">
+  <h2 style="margin-top:0">{{t "edit.tab_general"}}</h2>
+  <dl class="kv">
+    <dt>{{t "clients.username"}}</dt><dd class="mono">{{.Username}}</dd>
+    <dt>{{t "clients.last_seen"}}</dt><dd>{{fmtTime .LastSeen}}</dd>
+  </dl>
+  <form method="post" action="/clients/ip" style="margin-top:12px">
+    <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="name" value="{{.Name}}"><input type="hidden" name="back" value="edit">
+    <label for="ip">{{t "clients.ip"}}</label>
+    <input id="ip" type="text" name="ip" value="{{.Addr}}" required>
+    <p class="hint">{{t "edit.addresses_hint"}}</p>
+    <p><button type="submit">{{t "clients.change_ip"}}</button></p>
+  </form>
+</div>
+
+<div class="card">
+  <h2 style="margin-top:0">{{t "edit.access_title"}}</h2>
+  <div class="actions">
+    <form method="post" action="/clients/toggle">
+      <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="name" value="{{.Name}}"><input type="hidden" name="back" value="edit">
+      <input type="hidden" name="enable" value="{{if .Enabled}}0{{else}}1{{end}}">
+      <button class="secondary" type="submit">{{if .Enabled}}{{t "clients.disable"}}{{else}}{{t "clients.enable"}}{{end}}</button>
+    </form>
+    <form method="post" action="/clients/password">
+      <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="name" value="{{.Name}}">
+      <button class="secondary" type="submit">{{t "clients.reset_password"}}</button>
+    </form>
+  </div>
+  <p class="hint">{{t "edit.access_hint"}}</p>
+</div>
+
+<div class="card">
+  <h2 style="margin-top:0">{{t "edit.danger_title"}}</h2>
+  <p class="hint">{{t "edit.danger_hint"}}</p>
+  <form method="post" action="/clients/delete">
+    <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="name" value="{{.Name}}">
+    <label class="check"><input type="checkbox" required> {{t "confirm.sure"}}</label>
+    <p><button class="danger" type="submit">{{t "clients.delete_confirm"}}</button></p>
+  </form>
+</div>
+{{else}}
+<p class="muted">{{t "edit.intro"}}</p>
+<form method="post" action="/clients/edit">
+  <input type="hidden" name="csrf" value="{{$.CSRF}}">
+  <input type="hidden" name="name" value="{{.Name}}">
+  <input type="hidden" name="tab" value="{{.Tab}}">
+
+  {{if eq .Tab "sender"}}
+  <div class="card">
+    <h2 style="margin-top:0">{{t "edit.sender_title"}}</h2>
+    <p class="hint">{{t "edit.sender_hint"}}</p>
+    <fieldset class="seg"><legend>{{t "edit.mode"}}</legend>
+      <label class="opt"><input type="radio" name="sender_mode" value="" {{if eq .SenderMode ""}}checked{{end}}><span><strong>{{t "edit.mode_off"}}</strong><small>{{t "edit.mode_off_d"}}</small></span></label>
+      <label class="opt"><input type="radio" name="sender_mode" value="log" {{if eq .SenderMode "log"}}checked{{end}}><span><strong>{{t "edit.mode_log"}}</strong><small>{{t "edit.mode_log_d"}}</small></span></label>
+      <label class="opt"><input type="radio" name="sender_mode" value="enforce" {{if eq .SenderMode "enforce"}}checked{{end}}><span><strong>{{t "edit.mode_enforce"}}</strong><small>{{t "edit.mode_enforce_d"}}</small></span></label>
+    </fieldset>
+    <label for="sender_action">{{t "edit.sender_action"}}</label>
+    <select id="sender_action" name="sender_action">
+      <option value="rewrite" {{if eq .SenderAction "rewrite"}}selected{{end}}>{{t "edit.sender_rewrite_opt"}}</option>
+      <option value="reject" {{if ne .SenderAction "rewrite"}}selected{{end}}>{{t "edit.sender_reject_opt"}}</option>
+    </select>
+    <label for="sender_rewrite">{{t "edit.sender_rewrite"}}</label>
+    <input id="sender_rewrite" type="email" name="sender_rewrite" value="{{.SenderRewrite}}" placeholder="printer@yourdomain.com">
+    <h3>{{t "edit.advanced"}}</h3>
+      <label for="sender_allowed">{{t "edit.sender_allowed"}}</label>
+      <textarea id="sender_allowed" name="sender_allowed" rows="3" placeholder="printer@yourdomain.com&#10;@scan.yourdomain.com">{{.SenderAllowed}}</textarea>
+      <p class="hint">{{t "edit.pattern_hint"}}</p>
+  </div>
+  {{end}}
+
+  {{if eq .Tab "recipients"}}
+  <div class="card">
+    <h2 style="margin-top:0">{{t "edit.rcpt_title"}}</h2>
+    <p class="hint">{{t "edit.rcpt_hint"}}</p>
+    <fieldset class="seg"><legend>{{t "edit.mode"}}</legend>
+      <label class="opt"><input type="radio" name="rcpt_mode" value="" {{if eq .RcptMode ""}}checked{{end}}><span><strong>{{t "edit.mode_off"}}</strong><small>{{t "edit.mode_off_d"}}</small></span></label>
+      <label class="opt"><input type="radio" name="rcpt_mode" value="log" {{if eq .RcptMode "log"}}checked{{end}}><span><strong>{{t "edit.mode_log"}}</strong><small>{{t "edit.mode_log_d"}}</small></span></label>
+      <label class="opt"><input type="radio" name="rcpt_mode" value="enforce" {{if eq .RcptMode "enforce"}}checked{{end}}><span><strong>{{t "edit.mode_enforce"}}</strong><small>{{t "edit.mode_enforce_d"}}</small></span></label>
+    </fieldset>
+    <label for="rcpt_scope">{{t "edit.rcpt_scope"}}</label>
+    <select id="rcpt_scope" name="rcpt_scope">
+      <option value="internal" {{if ne .RcptScope "list"}}selected{{end}}>{{t "edit.rcpt_internal"}}</option>
+      <option value="list" {{if eq .RcptScope "list"}}selected{{end}}>{{t "edit.rcpt_list"}}</option>
+    </select>
+    <p class="hint">{{t "edit.own_domains_now"}} <span class="mono">{{if .OwnDomains}}{{.OwnDomains}}{{else}}{{t "edit.none"}}{{end}}</span> (<a href="/settings#domains">{{t "edit.change"}}</a>)</p>
+    <label for="rcpt_allowed">{{t "edit.rcpt_allowed"}}</label>
+    <textarea id="rcpt_allowed" name="rcpt_allowed" rows="3" placeholder="boekhouder@external.example&#10;@partner.example">{{.RcptAllowed}}</textarea>
+    <p class="hint">{{t "edit.pattern_hint"}}</p>
+  </div>
+  {{end}}
+
+  {{if eq .Tab "limits"}}
+  <div class="card">
+    <h2 style="margin-top:0">{{t "edit.limits_title"}}</h2>
+    <p class="hint">{{t "edit.limits_hint"}}</p>
+    <fieldset class="seg"><legend>{{t "edit.mode"}}</legend>
+      <label class="opt"><input type="radio" name="lim_mode" value="" {{if eq .LimMode ""}}checked{{end}}><span><strong>{{t "edit.mode_off"}}</strong><small>{{t "edit.mode_off_d"}}</small></span></label>
+      <label class="opt"><input type="radio" name="lim_mode" value="log" {{if eq .LimMode "log"}}checked{{end}}><span><strong>{{t "edit.mode_log"}}</strong><small>{{t "edit.mode_log_d"}}</small></span></label>
+      <label class="opt"><input type="radio" name="lim_mode" value="enforce" {{if eq .LimMode "enforce"}}checked{{end}}><span><strong>{{t "edit.mode_enforce"}}</strong><small>{{t "edit.mode_enforce_d"}}</small></span></label>
+    </fieldset>
+    <div class="inline">
+      <div><label for="lim_hour">{{t "edit.lim_hour"}}</label><input id="lim_hour" type="number" min="0" name="lim_hour" value="{{.LimHour}}"></div>
+      <div><label for="lim_day">{{t "edit.lim_day"}}</label><input id="lim_day" type="number" min="0" name="lim_day" value="{{.LimDay}}"></div>
+      <div><label for="lim_rcpts">{{t "edit.lim_rcpts"}}</label><input id="lim_rcpts" type="number" min="0" name="lim_rcpts" value="{{.LimRcpts}}"></div>
+      <div><label for="lim_size">{{t "edit.lim_size"}}</label><input id="lim_size" type="number" min="0" name="lim_size" value="{{.LimSize}}"></div>
+    </div>
+    <p class="hint">{{t "edit.lim_empty"}}</p>
+    <h3>{{t "edit.advanced"}}</h3>
+      <label for="lim_action">{{t "edit.lim_action"}}</label>
+      <select id="lim_action" name="lim_action">
+        <option value="reject" {{if ne .LimAction "block"}}selected{{end}}>{{t "edit.lim_reject"}}</option>
+        <option value="block" {{if eq .LimAction "block"}}selected{{end}}>{{t "edit.lim_block_opt"}}</option>
+      </select>
+      <label for="lim_block">{{t "edit.lim_block_minutes"}}</label>
+      <input id="lim_block" type="number" min="0" name="lim_block" value="{{.LimBlock}}" placeholder="30">
+  </div>
+  {{end}}
+
+  {{if eq .Tab "connection"}}
+  <div class="card">
+    <h2 style="margin-top:0">{{t "edit.conn_title"}}</h2>
+    <p class="hint">{{t "edit.conn_hint"}}</p>
+    <label for="tls_min">{{t "edit.conn_min"}}</label>
+    <select id="tls_min" name="tls_min">
+      <option value="" {{if eq .TLSMin ""}}selected{{end}}>{{t "edit.conn_min_default"}}</option>
+      <option value="1.2" {{if eq .TLSMin "1.2"}}selected{{end}}>TLS 1.2</option>
+      <option value="1.1" {{if eq .TLSMin "1.1"}}selected{{end}}>TLS 1.1</option>
+      <option value="1.0" {{if eq .TLSMin "1.0"}}selected{{end}}>TLS 1.0</option>
+    </select>
+    <p class="hint">{{t "edit.conn_min_hint"}}</p>
+    <label class="check"><input type="checkbox" name="tls_plain" value="1" {{if .TLSPlain}}checked{{end}}> {{t "edit.conn_plain"}}</label>
+    <p class="hint">{{t "edit.conn_plain_hint"}}</p>
+  </div>
+  {{end}}
+
+  {{if eq .Tab "messages"}}
+  <div class="card">
+    <h2 style="margin-top:0">{{t "edit.headers_title"}}</h2>
+    <p class="hint">{{t "edit.headers_hint"}}</p>
+    <label for="reply_to">{{t "edit.reply_to"}}</label>
+    <input id="reply_to" type="email" name="reply_to" value="{{.ReplyTo}}">
+    <label for="subject_tag">{{t "edit.subject_tag"}}</label>
+    <input id="subject_tag" type="text" name="subject_tag" value="{{.SubjectTag}}" maxlength="40" placeholder="Printer">
+    <label for="bcc">{{t "edit.bcc"}}</label>
+    <textarea id="bcc" name="bcc" rows="2" placeholder="archive@yourdomain.com">{{.Bcc}}</textarea>
+    <p class="hint">{{t "edit.bcc_hint"}}</p>
+  </div>
+
+  <div class="card">
+    <h2 style="margin-top:0">{{t "edit.attach_title"}}</h2>
+    <p class="hint">{{t "edit.attach_hint"}}</p>
+    <fieldset class="seg"><legend>{{t "edit.mode"}}</legend>
+      <label class="opt"><input type="radio" name="attach_mode" value="" {{if eq .AttachMode ""}}checked{{end}}><span><strong>{{t "edit.mode_off"}}</strong><small>{{t "edit.mode_off_d"}}</small></span></label>
+      <label class="opt"><input type="radio" name="attach_mode" value="log" {{if eq .AttachMode "log"}}checked{{end}}><span><strong>{{t "edit.mode_log"}}</strong><small>{{t "edit.mode_log_d"}}</small></span></label>
+      <label class="opt"><input type="radio" name="attach_mode" value="enforce" {{if eq .AttachMode "enforce"}}checked{{end}}><span><strong>{{t "edit.mode_enforce"}}</strong><small>{{t "edit.mode_enforce_d"}}</small></span></label>
+    </fieldset>
+    <label for="attach_kind">{{t "edit.attach_kind"}}</label>
+    <select id="attach_kind" name="attach_kind">
+      <option value="block" {{if ne .AttachKind "allow"}}selected{{end}}>{{t "edit.attach_block"}}</option>
+      <option value="allow" {{if eq .AttachKind "allow"}}selected{{end}}>{{t "edit.attach_allow"}}</option>
+    </select>
+    <label for="attach_exts">{{t "edit.attach_exts"}}</label>
+    <input id="attach_exts" type="text" name="attach_exts" value="{{.AttachExts}}" placeholder="pdf, jpg, png">
+    <p class="hint">{{t "edit.attach_exts_hint"}}</p>
+  </div>
+  {{end}}
+
+  <p><button type="submit">{{t "edit.save"}}</button></p>
+</form>
+{{end}}
+{{end}}
+{{end}}
