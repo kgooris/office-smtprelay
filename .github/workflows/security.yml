@@ -54,9 +54,8 @@ jobs:
           format: sarif
           output: trivy.sarif
           exit-code: "1"
-        env:
-          # Mirror of the vulnerability database, avoids GitHub rate limits on the default one.
-          TRIVY_DB_REPOSITORY: public.ecr.aws/aquasecurity/trivy-db:2,ghcr.io/aquasecurity/trivy-db:2
+          version: v0.76.2
+          scanners: vuln
       - uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
