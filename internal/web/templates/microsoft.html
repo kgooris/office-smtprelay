@@ -15,15 +15,15 @@
     {{end}}
   </dl>
   {{if .Configured}}
-  <form method="post" action="/microsoft/check" style="margin-top:12px">
+  <form method="post" action="/microsoft/check">
     <input type="hidden" name="csrf" value="{{$.CSRF}}">
-    <button type="submit" class="secondary">{{t "ms.check"}}</button>
+    <div class="card-foot"><button type="submit" class="secondary">{{t "ms.check"}}</button></div>
   </form>
   {{end}}
 </div>
 
 <div class="card">
-  <h2 style="margin-top:0">{{if .Configured}}{{t "ms.update_title"}}{{else}}{{t "ms.setup_title"}}{{end}}</h2>
+  <h2>{{if .Configured}}{{t "ms.update_title"}}{{else}}{{t "ms.setup_title"}}{{end}}</h2>
   <p>{{t "ms.setup_intro"}} <a href="/help#entra">{{t "ms.setup_link"}}</a></p>
   <form method="post" action="/microsoft/save">
     <input type="hidden" name="csrf" value="{{$.CSRF}}">
@@ -37,7 +37,7 @@
     <label for="expires">{{t "ms.expires_label"}}</label>
     <input id="expires" type="date" name="expires" value="{{.ExpiresInput}}">
     <p class="hint">{{t "ms.expires_hint"}}</p>
-    <p><button type="submit">{{t "ms.save"}}</button></p>
+    <div class="card-foot"><button type="submit">{{t "ms.save"}}</button></div>
   </form>
 </div>
 {{end}}

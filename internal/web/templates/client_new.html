@@ -1,7 +1,7 @@
 {{define "content"}}
 {{with .Data}}
+<a class="crumb" href="/clients">&larr; {{t "edit.back"}}</a>
 <h1>{{t "clients.add_title"}}</h1>
-<p><a href="/clients">&larr; {{t "edit.back"}}</a></p>
 
 <div class="card">
   <form method="post" action="/clients/add">
@@ -22,7 +22,7 @@
       <div><label for="mailbox">{{t "clients.mailbox"}}</label><input id="mailbox" type="email" name="mailbox" value="{{.FormMailbox}}" placeholder="printer@yourdomain.com"></div>
     </div>
     <p class="hint">{{t "clients.preset_hint"}}</p>
-    <p><button type="submit">{{t "clients.add_submit"}}</button> <a class="btn secondary" href="/clients">{{t "edit.cancel"}}</a></p>
+    <div class="card-foot"><button type="submit">{{t "clients.add_submit"}}</button> <a class="btn secondary" href="/clients">{{t "edit.cancel"}}</a></div>
   </form>
 </div>
 {{end}}

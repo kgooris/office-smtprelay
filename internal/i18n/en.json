@@ -356,7 +356,7 @@
   "settings.use_default": "Use the server default",
   "settings.retention": "Keep the log for (days)",
   "settings.max_mb": "Maximum message size (MB)",
-  "settings.conns": "Open connections per address (0 = no limit)",
+  "settings.conns": "Connections per address (0 = off)",
   "settings.empty_default": "The grey number in an empty field is the default that then applies.",
   "settings.conns_hint": "A limit protects the relay against a device that opens connections without end. A value of 5 to 10 is plenty for printers.",
   "settings.hostname": "Server name in the greeting",
@@ -483,7 +483,7 @@
   "security.reset_2fa": "Reset two-step",
   "security.delete_confirm": "Delete this user",
   "security.add_title": "Add a user",
-  "security.password_optional": "Password (empty = generate one)",
+  "security.password_optional": "Password (empty = generate)",
   "security.add_hint": "Administrators can change everything. Read-only users can look at all pages but cannot change anything. A generated password is shown once. Each user can add two-step verification under Account.",
   "security.add_button": "Add user",
   "security.pass_once": "Password for %s. It is shown only once.",
@@ -507,5 +507,13 @@
   "edit.mode_off_d": "Nothing is checked. This is the default.",
   "edit.mode_log_d": "Mail goes through as normal. Violations are only written to the log, so you can see what would happen.",
   "edit.mode_enforce_d": "Mail that breaks the rule is refused.",
-  "confirm.sure": "Yes, I am sure"
+  "confirm.sure": "Yes, I am sure",
+  "edit.sender_rewrite_t": "Rewrite",
+  "edit.sender_reject_t": "Refuse",
+  "edit.rcpt_internal_t": "Own domains",
+  "edit.rcpt_list_t": "Only the list",
+  "edit.lim_reject_t": "Delay the message",
+  "edit.lim_block_t": "Block the device",
+  "edit.attach_block_t": "Refuse these types",
+  "edit.attach_allow_t": "Only these types"
 }

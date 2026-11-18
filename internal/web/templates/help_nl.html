@@ -1,11 +1,11 @@
 {{define "help_nl"}}
 <div class="card">
-  <h2 style="margin-top:0">Hoe werkt het</h2>
+  <h2>Hoe werkt het</h2>
   <p>Toestellen in je netwerk (printers, scanners) sturen mail naar deze relay met een vast IP-adres en een gebruikersnaam en wachtwoord. De relay stuurt de mail door naar Microsoft 365 via de Microsoft Graph API met een app-registratie. Er staat dus geen Microsoft-wachtwoord op een toestel en Security Defaults kunnen aan blijven.</p>
 </div>
 
 <div class="card">
-  <h2 style="margin-top:0">Stappenplan in het kort</h2>
+  <h2>Stappenplan in het kort</h2>
   <ol>
     <li><a href="#entra">De Microsoft Entra-app aanmaken</a> (ongeveer 10 minuten)</li>
     <li><a href="#connect">De gegevens invullen en de verbinding controleren</a></li>
@@ -23,7 +23,7 @@
 </div>
 
 <div class="card" id="entra">
-  <h2 style="margin-top:0">1. De Microsoft Entra-app aanmaken</h2>
+  <h2>1. De Microsoft Entra-app aanmaken</h2>
   <p>Je hebt een account nodig dat app-registraties mag maken en beheerderstoestemming mag geven (<em>Application Administrator</em> of <em>Global Administrator</em>). Je hebt geen Azure-abonnement en geen extra licentie nodig.</p>
 
   <h3>Optie A: in de portal</h3>
@@ -51,7 +51,7 @@
 </div>
 
 <div class="card" id="connect">
-  <h2 style="margin-top:0">2. De gegevens invullen en de verbinding controleren</h2>
+  <h2>2. De gegevens invullen en de verbinding controleren</h2>
   <ol>
     <li>Open de pagina <a href="/microsoft">Microsoft 365</a>.</li>
     <li>Vul <strong>Tenant ID</strong>, <strong>Application (client) ID</strong>, het <strong>client secret</strong> en de <strong>vervaldatum</strong> in en klik op <em>Opslaan</em>. De vervaldatum is optioneel, maar dan waarschuwt het dashboard je 30 dagen vóór het secret verloopt.</li>
@@ -60,7 +60,7 @@
 </div>
 
 <div class="card" id="mailbox">
-  <h2 style="margin-top:0">3. Een afzender-mailbox voorzien</h2>
+  <h2>3. Een afzender-mailbox voorzien</h2>
   <ul>
     <li>Het afzenderadres van een toestel moet een <strong>bestaande mailbox</strong> in je tenant zijn, bijvoorbeeld <code>printer@jouwdomein.be</code>.</li>
     <li>Een <strong>gedeelde mailbox</strong> (shared mailbox) volstaat en heeft <strong>geen licentie</strong> nodig (tot 50 GB). Aanmelden op die mailbox hoeft niet aan te staan en SMTP AUTH ook niet: de relay meldt nooit aan als die mailbox.</li>
@@ -73,7 +73,7 @@ New-Mailbox -Shared -Name "Printer" -DisplayName "Printer" -PrimarySmtpAddress p
 </div>
 
 <div class="card" id="scope">
-  <h2 style="margin-top:0">4. Beperken als welke mailboxen de app mag versturen (aanbevolen)</h2>
+  <h2>4. Beperken als welke mailboxen de app mag versturen (aanbevolen)</h2>
   <p>Zonder beperking laat <code>Mail.Send</code> (applicatierecht) de app versturen als <strong>elke</strong> mailbox in je tenant. Lekt het secret, dan kan iemand mailen als eender wie in je organisatie. Met <strong>Exchange Online RBAC for Applications</strong> beperk je dat tot de mailboxen die je kiest. Bij een kleine tenant met een vertrouwd netwerk mag je deze stap overslaan.</p>
   <p>Je hebt ook de rol <em>Exchange Administrator</em> nodig. De <strong>Object ID van de service principal</strong> vind je in Entra onder <strong>Enterprise applications</strong> → <code>office-smtprelay</code> → <strong>Overview</strong> (let op: <em>niet</em> de Object ID van de app-registratie).</p>
   <ol>
@@ -105,12 +105,12 @@ Test-ServicePrincipalAuthorization -Identity $spId -Resource iemand-anders@jouwd
 </div>
 
 <div class="card" id="wait">
-  <h2 style="margin-top:0">5. Ongeveer 5 minuten wachten</h2>
+  <h2>5. Ongeveer 5 minuten wachten</h2>
   <p>Nieuwe toestemmingen en rechten werken bij Microsoft <strong>niet meteen</strong>. Reken op ongeveer <strong>5 minuten</strong>, soms tot <strong>30 minuten</strong> bij Exchange-rolwijzigingen. Een testmail die direct na het instellen faalt, betekent dus niet dat er iets fout staat: wacht even en probeer opnieuw.</p>
 </div>
 
 <div class="card" id="testmail">
-  <h2 style="margin-top:0">6. Een testmail versturen</h2>
+  <h2>6. Een testmail versturen</h2>
   <ol>
     <li>Open de pagina <a href="/test">Testmail</a>.</li>
     <li>Kies als afzender de mailbox uit stap 3 en als ontvanger je eigen adres. Probeer later ook een extern adres.</li>
@@ -121,7 +121,7 @@ Test-ServicePrincipalAuthorization -Identity $spId -Resource iemand-anders@jouwd
 </div>
 
 <div class="card" id="device">
-  <h2 style="margin-top:0">7. Het toestel toevoegen en instellen</h2>
+  <h2>7. Het toestel toevoegen en instellen</h2>
   <ol>
     <li>Geef het toestel eerst een <strong>vast IP-adres</strong> in je router.</li>
     <li>Voeg het toe op de pagina <a href="/clients">Toestellen</a> met dat IP-adres. Het wachtwoord dat daarna verschijnt, wordt <strong>maar één keer</strong> getoond: noteer het meteen.</li>
@@ -141,7 +141,7 @@ Test-ServicePrincipalAuthorization -Identity $spId -Resource iemand-anders@jouwd
 </div>
 
 <div class="card" id="rules">
-  <h2 style="margin-top:0">Regels per toestel (optioneel)</h2>
+  <h2>Regels per toestel (optioneel)</h2>
   <p>De relay is geen open relay: een toestel moet een bekend IP-adres hebben én inloggen. Daarbovenop kan je per toestel extra regels instellen via <a href="/clients">Toestellen</a> → <em>Regels</em>. Er is <strong>niets verplicht</strong>: een toestel zonder regels werkt zoals altijd.</p>
   <ul>
     <li><strong>Afzender:</strong> toelaten van bepaalde adressen, of de afzender <em>herschrijven</em> naar één adres. Herschrijven weigert nooit en is ideaal voor printers die hun afzender niet kunnen instellen.</li>
@@ -154,7 +154,7 @@ Test-ServicePrincipalAuthorization -Identity $spId -Resource iemand-anders@jouwd
 </div>
 
 <div class="card" id="admin">
-  <h2 style="margin-top:0">Beheer, meldingen en beveiliging van de interface</h2>
+  <h2>Beheer, meldingen en beveiliging van de interface</h2>
   <ul>
     <li><strong><a href="/notifications">Meldingen</a>:</strong> een korte mail bij problemen met Microsoft 365, een bijna verlopen secret, een geblokkeerd toestel of een pauze. Staat standaard uit.</li>
     <li><strong><a href="/connection">Verbinding</a>:</strong> het TLS-certificaat vervangen (uploaden of opnieuw zelf laten maken), de oudste toegelaten TLS-versie, en extra poorten (SMTP over TLS, of zonder versleuteling voor oude toestellen). Voor een oud toestel stel je op het tabblad <em>Verbinding</em> van dat toestel een uitzondering in, in plaats van alles te verlagen.</li>
@@ -166,7 +166,7 @@ Test-ServicePrincipalAuthorization -Identity $spId -Resource iemand-anders@jouwd
 </div>
 
 <div class="card" id="network">
-  <h2 style="margin-top:0">8. Netwerk en HTTPS</h2>
+  <h2>8. Netwerk en HTTPS</h2>
   <ul>
     <li>Sta de SMTP-poort enkel toe vanaf de IP-adressen van je toestellen (firewallregel). De relay controleert zelf ook het bron-IP.</li>
     <li>Deze webinterface spreekt gewone HTTP. Zet er een reverse proxy voor die HTTPS afhandelt en stel <code>SMTPRELAY_TRUST_PROXY=true</code> in, zodat het echte client-IP en de HTTPS-status gebruikt worden.</li>
@@ -174,7 +174,7 @@ Test-ServicePrincipalAuthorization -Identity $spId -Resource iemand-anders@jouwd
 </div>
 
 <div class="card" id="rotate">
-  <h2 style="margin-top:0">9. Het client secret vernieuwen</h2>
+  <h2>9. Het client secret vernieuwen</h2>
   <p>Verloopt het secret, dan stopt alle mail. Het dashboard waarschuwt je 30 dagen vooraf. Vernieuwen zonder onderbreking:</p>
   <ol>
     <li>Entra → <strong>App registrations</strong> → <code>office-smtprelay</code> → <strong>Certificates &amp; secrets</strong> → <strong>New client secret</strong>, en kopieer de <strong>Value</strong>.</li>
@@ -184,7 +184,7 @@ Test-ServicePrincipalAuthorization -Identity $spId -Resource iemand-anders@jouwd
 </div>
 
 <div class="card" id="problems">
-  <h2 style="margin-top:0">Problemen oplossen</h2>
+  <h2>Problemen oplossen</h2>
   <table>
     <thead><tr><th>Melding</th><th>Meest waarschijnlijke oorzaak</th></tr></thead>
     <tbody>

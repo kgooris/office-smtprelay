@@ -356,7 +356,7 @@
   "settings.use_default": "Standaard van de server gebruiken",
   "settings.retention": "Logboek bewaren (dagen)",
   "settings.max_mb": "Maximale berichtgrootte (MB)",
-  "settings.conns": "Open verbindingen per adres (0 = geen limiet)",
+  "settings.conns": "Verbindingen per adres (0 = uit)",
   "settings.empty_default": "Het grijze getal in een leeg veld is de standaardwaarde die dan geldt.",
   "settings.conns_hint": "Een limiet beschermt de relay tegen een toestel dat eindeloos verbindingen opent. Een waarde van 5 tot 10 is ruim genoeg voor printers.",
   "settings.hostname": "Servernaam in de begroeting",
@@ -483,7 +483,7 @@
   "security.reset_2fa": "Tweestaps resetten",
   "security.delete_confirm": "Deze gebruiker verwijderen",
   "security.add_title": "Een gebruiker toevoegen",
-  "security.password_optional": "Wachtwoord (leeg = een wachtwoord genereren)",
+  "security.password_optional": "Wachtwoord (leeg = genereren)",
   "security.add_hint": "Beheerders kunnen alles wijzigen. Gebruikers met alleen-lezen kunnen alle pagina's bekijken maar niets wijzigen. Een gegenereerd wachtwoord wordt één keer getoond. Elke gebruiker kan zelf tweestapsverificatie toevoegen onder Account.",
   "security.add_button": "Gebruiker toevoegen",
   "security.pass_once": "Wachtwoord voor %s. Het wordt maar één keer getoond.",
@@ -507,5 +507,13 @@
   "edit.mode_off_d": "Er wordt niets gecontroleerd. Dit is de standaard.",
   "edit.mode_log_d": "Mails gaan gewoon door. Overtredingen komen enkel in het logboek, zodat je ziet wat er zou gebeuren.",
   "edit.mode_enforce_d": "Mails die de regel overtreden worden geweigerd.",
-  "confirm.sure": "Ja, ik weet het zeker"
+  "confirm.sure": "Ja, ik weet het zeker",
+  "edit.sender_rewrite_t": "Herschrijven",
+  "edit.sender_reject_t": "Weigeren",
+  "edit.rcpt_internal_t": "Eigen domeinen",
+  "edit.rcpt_list_t": "Enkel de lijst",
+  "edit.lim_reject_t": "Bericht uitstellen",
+  "edit.lim_block_t": "Toestel blokkeren",
+  "edit.attach_block_t": "Types weigeren",
+  "edit.attach_allow_t": "Enkel deze types"
 }

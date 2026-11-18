@@ -3,7 +3,7 @@
 <p class="muted">{{t "settings.intro"}}</p>
 {{with .Data}}
 <div class="card">
-  <h2 style="margin-top:0">{{t "settings.general_title"}}</h2>
+  <h2>{{t "settings.general_title"}}</h2>
   <p class="hint">{{t "settings.general_hint"}}</p>
   <form method="post" action="/settings/general">
     <input type="hidden" name="csrf" value="{{$.CSRF}}">
@@ -20,23 +20,23 @@
     </div>
     <p class="hint">{{t "settings.empty_default"}}</p>
     <p class="hint">{{t "settings.conns_hint"}}</p>
-    <dl class="kv" style="margin-top:10px">
+    <dl class="kv">
       <dt>{{t "settings.hostname"}}</dt><dd class="mono">{{.Hostname}}</dd>
       <dt>{{t "settings.smtp_port"}}</dt><dd class="mono">{{.PublicPort}}</dd>
     </dl>
     <p class="hint">{{t "settings.env_only"}}</p>
-    <p><button type="submit">{{t "settings.general_save"}}</button></p>
+    <div class="card-foot"><button type="submit">{{t "settings.general_save"}}</button></div>
   </form>
 </div>
 
 <div class="card" id="domains">
-  <h2 style="margin-top:0">{{t "settings.domains_title"}}</h2>
+  <h2>{{t "settings.domains_title"}}</h2>
   <p class="hint">{{t "settings.domains_hint"}}</p>
   <form method="post" action="/settings/domains">
     <input type="hidden" name="csrf" value="{{$.CSRF}}">
     <label for="domains_in">{{t "settings.domains_label"}}</label>
     <input id="domains_in" type="text" name="domains" value="{{.OwnDomains}}" placeholder="yourdomain.com, other.example">
-    <p><button type="submit">{{t "settings.domains_save"}}</button></p>
+    <div class="card-foot"><button type="submit">{{t "settings.domains_save"}}</button></div>
   </form>
 </div>
 {{end}}

@@ -39,8 +39,8 @@
   </tbody>
 </table></div>
 
-<div class="card" style="margin-top:16px">
-  <h2 style="margin-top:0">{{t "security.add_title"}}</h2>
+<div class="card">
+  <h2>{{t "security.add_title"}}</h2>
   <form method="post" action="/security/user/add">
     <input type="hidden" name="csrf" value="{{$.CSRF}}">
     <div class="inline">
@@ -50,12 +50,12 @@
       <div><label for="np">{{t "security.password_optional"}}</label><input id="np" type="password" name="password" minlength="12" autocomplete="new-password"></div>
     </div>
     <p class="hint">{{t "security.add_hint"}}</p>
-    <p><button type="submit">{{t "security.add_button"}}</button></p>
+    <div class="card-foot"><button type="submit">{{t "security.add_button"}}</button></div>
   </form>
 </div>
 
 <div class="card">
-  <h2 style="margin-top:0">{{t "security.access_title"}}</h2>
+  <h2>{{t "security.access_title"}}</h2>
   <form method="post" action="/security/access">
     <input type="hidden" name="csrf" value="{{$.CSRF}}">
     <label for="allow">{{t "security.allow"}}</label>
@@ -64,7 +64,7 @@
     <label for="session">{{t "security.session"}}</label>
     <input id="session" type="number" min="5" max="480" name="session" value="{{.Session}}" placeholder="30">
     <p class="hint">{{t "security.session_hint"}}</p>
-    <p><button type="submit">{{t "security.save"}}</button></p>
+    <div class="card-foot"><button type="submit">{{t "security.save"}}</button></div>
   </form>
 </div>
 {{end}}

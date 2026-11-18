@@ -11,7 +11,7 @@
 {{end}}
 {{if .Paused}}
 <div class="flash err">{{t "dashboard.paused"}}
-  <form method="post" action="/pause" style="display:inline">
+  <form method="post" action="/pause">
     <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="pause" value="0">
     <button class="small" type="submit">{{t "dashboard.resume"}}</button>
   </form>
@@ -60,12 +60,12 @@
 {{else}}<p class="muted">{{t "dashboard.no_failures"}}</p>{{end}}
 
 {{if not .Paused}}
-<div class="card" style="margin-top:24px">
-  <h2 style="margin-top:0">{{t "dashboard.stop_title"}}</h2>
+<div class="card danger-zone">
+  <h2>{{t "dashboard.stop_title"}}</h2>
   <p class="hint">{{t "dashboard.stop_hint"}}</p>
   <form method="post" action="/pause">
     <input type="hidden" name="csrf" value="{{$.CSRF}}"><input type="hidden" name="pause" value="1">
-    <button class="danger" type="submit">{{t "dashboard.stop_button"}}</button>
+    <div class="card-foot"><button class="danger" type="submit">{{t "dashboard.stop_button"}}</button></div>
   </form>
 </div>
 {{end}}

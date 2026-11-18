@@ -3,7 +3,7 @@
 <h1>{{if .Reset}}{{t "created.title_reset"}}{{else}}{{t "created.title_new"}}{{end}}</h1>
 <div class="flash warn">{{t "created.once"}}</div>
 <div class="card">
-  <h2 style="margin-top:0">{{.Name}}</h2>
+  <h2>{{.Name}}</h2>
   <dl class="kv">
     <dt>{{t "created.server"}}</dt><dd class="mono">{{.Host}}</dd>
     <dt>{{t "created.port"}}</dt><dd class="mono">{{.Port}}</dd>
@@ -16,6 +16,6 @@
   <p class="hint">{{t "created.sender_hint"}}</p>
   <p class="hint">{{t "created.cert_hint"}}</p>
 </div>
-<p><a class="btn" href="/clients">{{t "created.back"}}</a></p>
+<div class="actions"><a class="btn" href="/clients">{{t "created.back"}}</a></div>
 {{end}}
 {{end}}

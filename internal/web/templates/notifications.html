@@ -5,7 +5,7 @@
 <form method="post" action="/notifications">
   <input type="hidden" name="csrf" value="{{$.CSRF}}">
   <div class="card">
-    <label><input type="checkbox" name="enabled" value="1" {{if .Enabled}}checked{{end}}> {{t "notify.enabled"}}</label>
+    <label class="check"><input type="checkbox" name="enabled" value="1" {{if .Enabled}}checked{{end}}> {{t "notify.enabled"}}</label>
     <label for="to">{{t "notify.to"}}</label>
     <input id="to" type="email" name="to" value="{{.To}}" placeholder="admin@yourdomain.com">
     <label for="from">{{t "notify.from"}}</label>
@@ -13,21 +13,21 @@
     <p class="hint">{{t "notify.from_hint"}}</p>
   </div>
   <div class="card">
-    <h2 style="margin-top:0">{{t "notify.which"}}</h2>
+    <h2>{{t "notify.which"}}</h2>
     {{range $k := .All}}
     <label class="check"><input type="checkbox" name="kind_{{$k}}" value="1" {{if index $.Data.Kinds $k}}checked{{end}}> {{t (printf "notify.kind_%s" $k)}}</label>
     <p class="hint">{{t (printf "notify.kind_%s_hint" $k)}}</p>
     {{end}}
   </div>
-  <p><button type="submit">{{t "notify.save"}}</button></p>
+  <div class="actions"><button type="submit">{{t "notify.save"}}</button></div>
 </form>
 
 <div class="card">
-  <h2 style="margin-top:0">{{t "notify.test_title"}}</h2>
+  <h2>{{t "notify.test_title"}}</h2>
   <p class="hint">{{t "notify.test_hint"}}</p>
   <form method="post" action="/notifications/test">
     <input type="hidden" name="csrf" value="{{$.CSRF}}">
-    <button type="submit" class="secondary">{{t "notify.test_send"}}</button>
+    <div class="card-foot"><button type="submit" class="secondary">{{t "notify.test_send"}}</button></div>
   </form>
 </div>
 <p class="hint">{{t "notify.limits"}}</p>

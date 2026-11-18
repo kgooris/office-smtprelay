@@ -4,7 +4,7 @@
 {{with .Data}}
 
 <div class="card">
-  <h2 style="margin-top:0">{{t "conn.cert_title"}}</h2>
+  <h2>{{t "conn.cert_title"}}</h2>
   {{if .CertAvail}}
   {{if .Cert.Expired}}<div class="flash err">{{t "conn.cert_expired"}}</div>
   {{else if .Cert.ExpiresSoon}}<div class="flash warn">{{t "conn.cert_soon"}}</div>{{end}}
@@ -20,30 +20,37 @@
 
   {{if .CertManaged}}
   <p class="hint">{{t "conn.cert_managed"}}</p>
-  {{else if .CertAvail}}
-  <h3>{{t "conn.upload_title"}}</h3>
-    <form method="post" action="/connection/cert" enctype="multipart/form-data">
-      <input type="hidden" name="csrf" value="{{$.CSRF}}">
-      <label for="cert">{{t "conn.cert_file"}}</label>
-      <input id="cert" type="file" name="cert" accept=".pem,.crt,.cer" required>
-      <label for="key">{{t "conn.key_file"}}</label>
-      <input id="key" type="file" name="key" accept=".pem,.key" required>
-      <p class="hint">{{t "conn.upload_hint"}}</p>
-      <p><button type="submit">{{t "conn.upload_button"}}</button></p>
-    </form>
-  <h3>{{t "conn.regen_title"}}</h3>
-    <form method="post" action="/connection/regenerate">
-      <input type="hidden" name="csrf" value="{{$.CSRF}}">
-      <label for="names">{{t "conn.regen_names"}}</label>
-      <input id="names" type="text" name="names" value="{{.NamesText}}" required>
-      <p class="hint">{{t "conn.regen_hint"}}</p>
-      <p><button type="submit" class="secondary">{{t "conn.regen_button"}}</button></p>
-    </form>
   {{end}}
 </div>
 
+{{if and .CertAvail (not .CertManaged)}}
 <div class="card">
-  <h2 style="margin-top:0">{{t "conn.min_title"}}</h2>
+  <h2>{{t "conn.upload_title"}}</h2>
+  <form method="post" action="/connection/cert" enctype="multipart/form-data">
+    <input type="hidden" name="csrf" value="{{$.CSRF}}">
+    <label for="cert">{{t "conn.cert_file"}}</label>
+    <input id="cert" type="file" name="cert" accept=".pem,.crt,.cer" required>
+    <label for="key">{{t "conn.key_file"}}</label>
+    <input id="key" type="file" name="key" accept=".pem,.key" required>
+    <p class="hint">{{t "conn.upload_hint"}}</p>
+    <div class="card-foot"><button type="submit">{{t "conn.upload_button"}}</button></div>
+  </form>
+</div>
+
+<div class="card">
+  <h2>{{t "conn.regen_title"}}</h2>
+  <form method="post" action="/connection/regenerate">
+    <input type="hidden" name="csrf" value="{{$.CSRF}}">
+    <label for="names">{{t "conn.regen_names"}}</label>
+    <input id="names" type="text" name="names" value="{{.NamesText}}" required>
+    <p class="hint">{{t "conn.regen_hint"}}</p>
+    <div class="card-foot"><button type="submit" class="secondary">{{t "conn.regen_button"}}</button></div>
+  </form>
+</div>
+{{end}}
+
+<div class="card">
+  <h2>{{t "conn.min_title"}}</h2>
   <p class="hint">{{t "conn.min_hint"}}</p>
   <form method="post" action="/connection/tlsmin">
     <input type="hidden" name="csrf" value="{{$.CSRF}}">
@@ -56,12 +63,12 @@
       <option value="1.0" {{if eq .TLSMin "1.0"}}selected{{end}}>TLS 1.0 ({{t "conn.old"}})</option>
     </select>
     <p class="hint">{{t "conn.min_warn"}}</p>
-    <p><button type="submit">{{t "conn.save"}}</button></p>
+    <div class="card-foot"><button type="submit">{{t "conn.save"}}</button></div>
   </form>
 </div>
 
 <div class="card">
-  <h2 style="margin-top:0">{{t "conn.ports_title"}}</h2>
+  <h2>{{t "conn.ports_title"}}</h2>
   <p class="hint">{{t "conn.ports_hint" .MainPort}}</p>
   <form method="post" action="/connection/ports">
     <input type="hidden" name="csrf" value="{{$.CSRF}}">
@@ -75,7 +82,7 @@
     <p class="hint">{{t "conn.docker_hint"}}</p>
     {{if or .Implicit .Legacy}}<pre>ports:
 {{.Snippet}}</pre>{{end}}
-    <p><button type="submit">{{t "conn.save"}}</button></p>
+    <div class="card-foot"><button type="submit">{{t "conn.save"}}</button></div>
   </form>
 </div>
 {{end}}

@@ -1,11 +1,11 @@
 {{define "help_en"}}
 <div class="card">
-  <h2 style="margin-top:0">How it works</h2>
+  <h2>How it works</h2>
   <p>Devices on your network (printers, scanners) send mail to this relay with a fixed IP address and a username and password. The relay forwards the mail to Microsoft 365 through the Microsoft Graph API using an app registration. No Microsoft password is stored on any device, and Security Defaults can stay on.</p>
 </div>
 
 <div class="card">
-  <h2 style="margin-top:0">Step-by-step overview</h2>
+  <h2>Step-by-step overview</h2>
   <ol>
     <li><a href="#entra">Create the Microsoft Entra app</a> (about 10 minutes)</li>
     <li><a href="#connect">Enter the values and check the connection</a></li>
@@ -23,7 +23,7 @@
 </div>
 
 <div class="card" id="entra">
-  <h2 style="margin-top:0">1. Create the Microsoft Entra app</h2>
+  <h2>1. Create the Microsoft Entra app</h2>
   <p>You need an account that can create app registrations and grant admin consent (<em>Application Administrator</em> or <em>Global Administrator</em>). No Azure subscription and no extra licence are needed.</p>
 
   <h3>Option A: in the portal</h3>
@@ -51,7 +51,7 @@
 </div>
 
 <div class="card" id="connect">
-  <h2 style="margin-top:0">2. Enter the values and check the connection</h2>
+  <h2>2. Enter the values and check the connection</h2>
   <ol>
     <li>Open the <a href="/microsoft">Microsoft 365</a> page.</li>
     <li>Enter the <strong>Tenant ID</strong>, <strong>Application (client) ID</strong>, the <strong>client secret</strong> and the <strong>expiry date</strong>, then press <em>Save</em>. The expiry date is optional, but with it the dashboard warns you 30 days before the secret expires.</li>
@@ -60,7 +60,7 @@
 </div>
 
 <div class="card" id="mailbox">
-  <h2 style="margin-top:0">3. Provide a sender mailbox</h2>
+  <h2>3. Provide a sender mailbox</h2>
   <ul>
     <li>The sender address of a device must be an <strong>existing mailbox</strong> in your tenant, for example <code>printer@yourdomain.com</code>.</li>
     <li>A <strong>shared mailbox</strong> is enough and needs <strong>no licence</strong> (up to 50 GB). Sign-in does not have to be enabled on it and neither does SMTP AUTH: the relay never signs in as that mailbox.</li>
@@ -73,7 +73,7 @@ New-Mailbox -Shared -Name "Printer" -DisplayName "Printer" -PrimarySmtpAddress p
 </div>
 
 <div class="card" id="scope">
-  <h2 style="margin-top:0">4. Limit which mailboxes the app can send as (recommended)</h2>
+  <h2>4. Limit which mailboxes the app can send as (recommended)</h2>
   <p>Without a limit, <code>Mail.Send</code> (application permission) lets the app send as <strong>any</strong> mailbox in your tenant. If the secret leaks, someone could send as anyone in your organisation. <strong>Exchange Online RBAC for Applications</strong> limits it to the mailboxes you choose. For a small tenant with a trusted network you may skip this step.</p>
   <p>You also need the <em>Exchange Administrator</em> role. Find the <strong>service principal Object ID</strong> in Entra under <strong>Enterprise applications</strong> → <code>office-smtprelay</code> → <strong>Overview</strong> (note: <em>not</em> the Object ID of the app registration).</p>
   <ol>
@@ -105,12 +105,12 @@ Test-ServicePrincipalAuthorization -Identity $spId -Resource someone-else@yourdo
 </div>
 
 <div class="card" id="wait">
-  <h2 style="margin-top:0">5. Wait about 5 minutes</h2>
+  <h2>5. Wait about 5 minutes</h2>
   <p>New consent and permissions do <strong>not</strong> take effect immediately at Microsoft. Allow about <strong>5 minutes</strong>, sometimes up to <strong>30 minutes</strong> for Exchange role changes. A test mail that fails right after setup does not mean something is wrong: wait a little and try again.</p>
 </div>
 
 <div class="card" id="testmail">
-  <h2 style="margin-top:0">6. Send a test mail</h2>
+  <h2>6. Send a test mail</h2>
   <ol>
     <li>Open the <a href="/test">Test mail</a> page.</li>
     <li>Use the mailbox from step 3 as sender and your own address as recipient. Later, also try an external address.</li>
@@ -121,7 +121,7 @@ Test-ServicePrincipalAuthorization -Identity $spId -Resource someone-else@yourdo
 </div>
 
 <div class="card" id="device">
-  <h2 style="margin-top:0">7. Add and configure the device</h2>
+  <h2>7. Add and configure the device</h2>
   <ol>
     <li>First give the device a <strong>fixed IP address</strong> in your router.</li>
     <li>Add it on the <a href="/clients">Clients</a> page with that IP address. The password that appears is shown <strong>only once</strong>: write it down right away.</li>
@@ -141,7 +141,7 @@ Test-ServicePrincipalAuthorization -Identity $spId -Resource someone-else@yourdo
 </div>
 
 <div class="card" id="rules">
-  <h2 style="margin-top:0">Rules per device (optional)</h2>
+  <h2>Rules per device (optional)</h2>
   <p>The relay is not an open relay: a device needs a known IP address <em>and</em> must sign in. On top of that you can set extra rules per device under <a href="/clients">Clients</a> → <em>Rules</em>. <strong>Nothing is required</strong>: a device without rules works exactly as before.</p>
   <ul>
     <li><strong>Sender:</strong> allow only certain addresses, or <em>rewrite</em> the sender to a single address. Rewriting never refuses and is ideal for printers that cannot set their sender.</li>
@@ -154,7 +154,7 @@ Test-ServicePrincipalAuthorization -Identity $spId -Resource someone-else@yourdo
 </div>
 
 <div class="card" id="admin">
-  <h2 style="margin-top:0">Administration, notifications and securing the interface</h2>
+  <h2>Administration, notifications and securing the interface</h2>
   <ul>
     <li><strong><a href="/notifications">Notifications</a>:</strong> a short e-mail for Microsoft 365 problems, a secret about to expire, a blocked device or a pause. Off by default.</li>
     <li><strong><a href="/connection">Connection</a>:</strong> replace the TLS certificate (upload one or have a new self-signed one created), the oldest accepted TLS version, and extra ports (SMTP over TLS, or without encryption for old devices). For an old device set an exception on its <em>Connection</em> tab instead of lowering everything.</li>
@@ -166,7 +166,7 @@ Test-ServicePrincipalAuthorization -Identity $spId -Resource someone-else@yourdo
 </div>
 
 <div class="card" id="network">
-  <h2 style="margin-top:0">8. Network and HTTPS</h2>
+  <h2>8. Network and HTTPS</h2>
   <ul>
     <li>Allow the SMTP port only from the IP addresses of your devices (firewall rule). The relay also checks the source IP itself.</li>
     <li>This web interface speaks plain HTTP. Put a reverse proxy in front of it that handles HTTPS and set <code>SMTPRELAY_TRUST_PROXY=true</code>, so the real client IP and the HTTPS status are used.</li>
@@ -174,7 +174,7 @@ Test-ServicePrincipalAuthorization -Identity $spId -Resource someone-else@yourdo
 </div>
 
 <div class="card" id="rotate">
-  <h2 style="margin-top:0">9. Renew the client secret</h2>
+  <h2>9. Renew the client secret</h2>
   <p>When the secret expires, all mail stops. The dashboard warns you 30 days ahead. To renew without interruption:</p>
   <ol>
     <li>Entra → <strong>App registrations</strong> → <code>office-smtprelay</code> → <strong>Certificates &amp; secrets</strong> → <strong>New client secret</strong>, and copy the <strong>Value</strong>.</li>
@@ -184,7 +184,7 @@ Test-ServicePrincipalAuthorization -Identity $spId -Resource someone-else@yourdo
 </div>
 
 <div class="card" id="problems">
-  <h2 style="margin-top:0">Troubleshooting</h2>
+  <h2>Troubleshooting</h2>
   <table>
     <thead><tr><th>Message</th><th>Most likely cause</th></tr></thead>
     <tbody>

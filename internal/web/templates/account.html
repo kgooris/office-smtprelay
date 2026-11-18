@@ -4,7 +4,7 @@
 <p class="muted">{{t "account.signed_in_as"}} <strong>{{.Username}}</strong> · {{if eq .Role "admin"}}{{t "role.admin"}}{{else}}{{t "role.readonly"}}{{end}}</p>
 
 <div class="card">
-  <h2 style="margin-top:0">{{t "account.password_title"}}</h2>
+  <h2>{{t "account.password_title"}}</h2>
   <form method="post" action="/account">
     <input type="hidden" name="csrf" value="{{$.CSRF}}">
     <label for="current">{{t "account.current"}}</label>
@@ -14,13 +14,13 @@
     <p class="hint">{{t "setup.password_hint"}}</p>
     <label for="confirm">{{t "setup.confirm"}}</label>
     <input id="confirm" type="password" name="confirm" autocomplete="new-password" minlength="12" required>
-    <p><button type="submit">{{t "account.submit"}}</button></p>
+    <div class="card-foot"><button type="submit">{{t "account.submit"}}</button></div>
   </form>
   <p class="hint">{{t "account.signout_note"}}</p>
 </div>
 
 <div class="card">
-  <h2 style="margin-top:0">{{t "totp.title"}}</h2>
+  <h2>{{t "totp.title"}}</h2>
   {{if .Recovery}}
   <div class="flash ok">{{t "totp.recovery_intro"}}</div>
   <pre>{{range .Recovery}}{{.}}
@@ -37,7 +37,7 @@
     <input type="hidden" name="csrf" value="{{$.CSRF}}">
     <label for="code">{{t "totp.code"}}</label>
     <input id="code" type="text" name="code" inputmode="numeric" autocomplete="one-time-code" required>
-    <p><button type="submit">{{t "totp.activate"}}</button></p>
+    <div class="card-foot"><button type="submit">{{t "totp.activate"}}</button></div>
   </form>
   {{else if .TOTP}}
   <p><span class="badge ok">{{t "totp.on"}}</span> {{t "totp.codes_left" .CodesLeft}}</p>
@@ -46,14 +46,14 @@
       <input type="hidden" name="csrf" value="{{$.CSRF}}">
       <label for="cur2">{{t "account.current"}}</label>
       <input id="cur2" type="password" name="current" autocomplete="current-password" required>
-      <p><button type="submit" class="danger">{{t "totp.disable_button"}}</button></p>
+      <div class="card-foot"><button type="submit" class="danger">{{t "totp.disable_button"}}</button></div>
     </form>
   {{else}}
   <p>{{t "totp.intro"}}</p>
   <p><span class="badge off">{{t "totp.off"}}</span></p>
   <form method="post" action="/account/totp/begin">
     <input type="hidden" name="csrf" value="{{$.CSRF}}">
-    <button type="submit">{{t "totp.begin"}}</button>
+    <div class="card-foot"><button type="submit">{{t "totp.begin"}}</button></div>
   </form>
   {{end}}
 </div>
